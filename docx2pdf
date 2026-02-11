@@ -1,0 +1,51 @@
+#!/bin/bash
+
+VERSION="1.0"
+SOFFICE=$(which soffice 2>/dev/null || echo "/Applications/LibreOffice.app/Contents/MacOS/soffice")
+
+if [ ! -x "$SOFFICE" ]; then
+    echo "Error: LibreOffice not found."
+    exit 1
+fi
+
+echo "docx2pdf v$VERSION"
+echo ""
+
+if [ "$1" = "-h" ] || [ -z "$1" ]; then
+    echo "Usage: $0 <output-directory>"
+    echo ""
+    echo "Creates ............. <output-directory>"
+    echo "Converts .docx files in the current directory to PDF."
+    echo "Conversion tool ..... LibreOffice"
+    exit 0
+fi
+
+OUTPUT_DIR="$1"
+
+if [ -e "$OUTPUT_DIR" ]; then
+    echo "Error: '$OUTPUT_DIR' already exists."
+    exit 1
+fi
+
+echo "Conversion tool ..... LibreOffice"
+echo "Output directory .... $OUTPUT_DIR"
+echo ""
+mkdir -p "$OUTPUT_DIR"
+
+COUNT=0
+
+for file in *.docx; do
+    if [ ! -f "$file" ]; then
+        echo "No .docx files found in the current directory."
+        exit 1
+    fi
+    echo "Converting: $(basename "$file") -> $OUTPUT_DIR/$(basename "$file" .docx).pdf"
+    if ! "$SOFFICE" --headless --convert-to pdf --outdir "$OUTPUT_DIR" "$file" > /dev/null 2>&1; then
+        echo "Error: Failed to convert $(basename "$file")"
+    else
+        COUNT=$((COUNT + 1))
+    fi
+done
+
+echo ""
+echo "Done. $COUNT file(s) converted to PDF."

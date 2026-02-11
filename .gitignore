@@ -1,0 +1,9 @@
+*.swp
+*.csv
+*.pyc
+.DS_Store
+.SynologyWorkingDirectory/
+.ipynb_checkpoints/
+__pycache__/
+imagemagic/
+venv/

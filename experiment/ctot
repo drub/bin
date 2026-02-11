@@ -1,0 +1,31 @@
+#! /bin/bash
+
+progVer="1.0"
+
+if [ -z $1 ]; then
+        # $1 not set. No parameter present.
+	a=a
+fi
+
+oldIFS=$IFS
+IFS="::"
+
+#set -xv	#debug
+
+while read line
+do
+	set $line
+	tokenCount=$#
+	printf "\$tokenCount .................................. $tokenCount \n"
+	printf "\$1 ........................................... $1 \n"
+	printf "\$2 ........................................... $2 \n"
+	printf "\$3 ........................................... $3 \n"
+	printf "\$4 ........................................... $4 \n"
+	printf "\$5 ........................................... $5 \n"
+	printf "\$6 ........................................... $6 \n"
+done
+
+exit
+
+# A comment line. Experiment with git.
+

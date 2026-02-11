@@ -1,0 +1,35 @@
+#!/bin/bash  
+# Usage: ./convert <output-dir>
+ 
+output_dir="$1"  
+if [ "x$output_dir" = "x" ]; then
+    echo "ERROR: Output directory required"
+    echo " "
+    echo "This script converts the .docx files in the current directory
+creates .pdf's in the output directory. The destination directory
+was not supplied."
+    exit
+fi
+ 
+echo "Make output directory ... ${output_dir}"
+mkdir -p "$output_dir"  
+echo " "
+echo " "
+
+for file in *.docx; do  
+#for file in "$INPUT_DIR"/*.{docx}; do  
+  #echo "Input file: $file"  
+
+  if [ -f "$file" ]; then  
+    echo "Converting file ......... $file"  
+    /Applications/LibreOffice.app/Contents/MacOS/soffice --headless \
+      --convert-to pdf \
+      --outdir "$output_dir" \
+      "$file"
+    echo " "
+  fi  
+done  
+ 
+echo " "
+echo "Done! Files saved to .... $output_dir"  
+

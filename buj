@@ -1,0 +1,143 @@
+#!/Users/thedrub/anaconda3/bin/python
+
+# ----------------------------------------------------------------------
+# Libraries
+# ----------------------------------------------------------------------
+import sys
+import os
+import shutil
+from os.path import exists
+from datetime import datetime
+import subprocess
+
+# ----------------------------------------------------------------------
+# Constants
+# ----------------------------------------------------------------------
+debug = True
+debug = False
+
+PROG_CONFIG = \
+    {"name"          : os.path.basename(sys.argv[0]), \
+     "maj_ver"        : "1", \
+     "min_ver"        : "1", \
+    }
+PROG_CONFIG["ver"] = PROG_CONFIG["maj_ver"] + "." + PROG_CONFIG["min_ver"]
+
+WORK_JOURNAL_FILE_DIR  = '/Users/thedrub/sync_synology/doc/journal/work/'
+WORK_JOURNAL_FILE      = 'journal_work.txt'
+WORK_JOURNAL_FILE_PATH = WORK_JOURNAL_FILE_DIR +  WORK_JOURNAL_FILE
+
+BACKUP_DIR = 'backup/'
+
+HRS_FILE_DIR  = '/Users/thedrub/sync_synology/spool/'
+HRS_FILE      = 'gethrs_output.csv'
+HRS_FILE_PATH = HRS_FILE_DIR +  HRS_FILE
+
+
+# ----------------------------------------------------------------------
+# Main main MAIN
+# ----------------------------------------------------------------------
+
+if __name__ == '__main__' :
+
+    # Create a new file name with the date as a prefix, like this
+    # yyyy-mm-dd_<file_name>.txt
+
+    # Get the current date, yyyy-mm-dd
+    now = datetime.now()
+    if debug :
+        print(f"++ now .......................... {now}")
+
+    date =  now.strftime("%Y-%m-%d")
+    if debug :
+        print(f"++ date ......................... {date}")
+
+    # Prepend the date to the filename
+    #targetFile = "test" + "_" + date + "_" + WORK_JOURNAL_FILE
+    targetFile = date + "_" + WORK_JOURNAL_FILE
+    if debug :
+        print(f"++ WORK_JOURNAL_FILE_DIR ........ {WORK_JOURNAL_FILE_DIR}")
+        print(f"++ targetFile ................... {targetFile}")
+
+    # Prepend the destination directory to the targetFile
+    journalBackupDest = WORK_JOURNAL_FILE_DIR + BACKUP_DIR + targetFile
+    if debug :
+        print(f"++ journalBackupDest ............ {journalBackupDest}")
+
+    if exists(WORK_JOURNAL_FILE_PATH) :
+        # Copy the journal source file to the new file name.
+        shutil.copy(WORK_JOURNAL_FILE_PATH, journalBackupDest)
+        print(f"++++ Work journal file copied to backup dir.")
+        print(f"++ File ................. {WORK_JOURNAL_FILE_PATH}")
+        print(f"++ Destination .......... {BACKUP_DIR}")
+        print(f"++ Journal backup ....... {journalBackupDest}")
+    else :
+        print(f"ERROR: File does not exist.")
+        print(f"File: {WORK_JOURNAL_FILE_PATH}")
+
+    # ------------------------------
+
+    # Copy the gethrs.csv file to yyy-mm-dd_gethrs.csv
+    if debug :
+        print(f"++ Backup the HRS file. +++++++++")
+        print(f"++ HRS_FILE_DIR ................. {HRS_FILE_DIR}")
+        print(f"++ HRS_FILE ..................... {HRS_FILE}")
+        print(f"++ HRS_FILE_PATH ................ {HRS_FILE_PATH}")
+
+    # Prepend the date to the filename
+    #targetFile = "test" + "_" + date + "_" + HRS_FILE
+    targetFile = date + "_" + HRS_FILE
+
+    # Putting the HRS file in the same DIR as the Journal file.
+    hrsBackupDest = WORK_JOURNAL_FILE_DIR + BACKUP_DIR + targetFile
+    if debug :
+        print(f"++ targetFile ................... {targetFile}")
+        print(f"++ hrsBackupDest................. {hrsBackupDest}")
+
+    if exists(HRS_FILE_PATH) :
+        # Copy the HRS source file to the new file name.
+        shutil.copy(HRS_FILE_PATH, hrsBackupDest)
+        print("")
+        print(f"++++ Hrs file copied to backup dir.")
+        print(f"++ File ................. {HRS_FILE_PATH}")
+        print(f"++ Destination .......... {BACKUP_DIR}")
+        print(f"++ HRS backup ........... {hrsBackupDest}")
+    else :
+        print(f"ERROR: File does not exist.")
+        print(f"File: {HRS_FILE_PATH}")
+
+    # Prompt use to start vi on the backup journal file.
+
+    print("")
+    response = input("++ Edit backup Journal file? ")
+    if response == "y" :
+        subprocess.run(['vim', journalBackupDest])
+    else :
+        print(f"++ The Journal should be updated!!")
+
+'''
+# ----------------------------------------------------------------------
+# ToDo TODO todo
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# History HISTORY history
+# ----------------------------------------------------------------------
+
+--------------------------------------------------
+buj, Ver 1.1
+--------------------------------------------------
+- Minor changes
+- Added
+    if __name__ == '__main__' :
+- Updated the indentations
+- Updated some user messages
+
+--------------------------------------------------
+buj, Ver 1.0
+--------------------------------------------------
+- Initial version
+'''
+
+

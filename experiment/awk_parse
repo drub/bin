@@ -1,0 +1,24 @@
+#!/usr/bin/awk -f
+
+# Parses time recording data.
+# Record format:
+# TIME::2.0::2017-02-25::START::END::ELAPSED::COMMENT::
+
+BEGIN { 
+	# Set the input field separator to double colon
+	FS="::" 
+
+	# Set the output field separator to tab.
+	OFS="\t"
+	}
+{
+	#printf "%s %s\n", "$1 .......... ", $1
+
+	# This didn't work as desired. It did not include the OFS between the fields.
+	#print $0
+
+	print $1,$2,$3,$4,$5,$6,$7,$8,$9,$10
+
+
+}
+

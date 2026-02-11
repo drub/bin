@@ -1,0 +1,35 @@
+#! /bin/bash
+
+# Copied the "actions" script
+# Search for "Question::"
+
+echo
+echo
+echo "++++ Work: journal_work.txt ++++++++++++++++++++++++"
+grep -in Question:: /Users/thedrub/sync_synology/doc/journal/work/journal_work.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Coaching: journal_personal.txt ++++++++++++++++++++++++"
+grep -in Question:: /Users/thedrub/sync_synology/doc/journal/journal_coaching.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Personal: journal_personal.txt ++++++++++++++++++++++++"
+grep -in Question:: /Users/thedrub/sync_synology/doc/journal/journal_personal.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Investments: journal_investments.txt ++++++++++++++++++++++++"
+grep -in Question:: /Users/thedrub/sync_synology/doc/journal/journal_investments.txt | grep -iv Done:
+
+#echo
+#echo
+#echo "++++ PDA: journal_pda.txt ++++++++++++++++++++++++"
+#grep -in Question:: /Users/thedrub/sync_synology/doc/journal/journal_pda.txt | grep -iv Done:
+
+#echo
+#echo
+#echo "++++ COD: journal_cod.txt ++++++++++++++++++++++++"
+#grep -in Question:: /Users/thedrub/sync_synology/doc/journal/journal_cod.txt | grep -iv Done:
+

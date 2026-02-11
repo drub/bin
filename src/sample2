@@ -1,0 +1,11 @@
+#! /bin/bash
+
+FOO='myTest3$;  t%^&;frog now! and *()"'
+
+FOO=`printf "%q" "$FOO"` 			# Has \ chars
+echo $FOO
+
+# Eat all the \ chars
+FOO=$(printf "%q" "$FOO" | sed "s/\\\\//g")	# Strip \ chars
+
+echo $FOO

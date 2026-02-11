@@ -1,0 +1,7 @@
+#!/bin/bash
+
+readonly fileList="\
+${HOME}/cloud_storage/Dropbox (cPrime Inc.)/for David Bacon/cPrime.txt\
+:${HOME}/Sync/Work/Agile/agile.txt\
+"
+

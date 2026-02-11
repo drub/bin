@@ -1,0 +1,218 @@
+#! /bin/bash
+
+# ----------------------------------------
+# Constants
+# ----------------------------------------
+readonly origIFS=$IFS
+readonly progVer="2.1"
+readonly dashLineLength=60
+readonly progName=$(basename $0)
+readonly uninitialized="UNINITIALIZED"
+
+# ----------------------------------------
+# Globals
+# ----------------------------------------
+debug="TRUE"
+debug="FALSE"
+error="FALSE"
+recordCount=0
+firstLinePrinted="FALSE"
+deleteCount=0
+
+# ----------------------------------------
+# Libraries
+# ----------------------------------------
+libList="${HOME}/bin/lib/dashline"
+
+for i in ${libList}; do
+    if [[ -r ${i} ]]; then    # Does it exist?
+        . ${i}                # Source the library file.
+    else
+        printf "%s\n" "ERROR: Library file not found. Could not source library file."
+        printf "%s\n" "File: $i"
+        exit 1
+    fi
+done
+
+# ----------------------------------------
+# ----------------------------------------
+# main Main MAIN
+# ----------------------------------------
+# ----------------------------------------
+
+if [[ "$debug" == "TRUE" ]]; then
+  # DEBUG information for the script.
+  DashLine 70 "+"
+  printf "%s\n"  "++ dashLineLength ............... .$dashLineLength."
+fi
+
+# Make sure the "jpg" directory exists.
+if [[ ! -d jpg && ! -d JPG ]]; then
+  printf "%s\n"  "++ ERROR: jpg directory not found. One of: jpg, JPG"
+  printf "%s\n"  "   This script expects a jpg directory where .JPG files are found."
+  error="TRUE"
+else
+    if [[ -d jpg ]];then
+        jpgDir=jpg
+    elif [[ -d JPG ]];then
+        jpgDir=JPG
+    fi
+    if [ "$debug" == "TRUE" ]; then
+     printf "%s\n" "jpg directory .............. $jpgDir"
+    fi
+fi
+
+# Make sure the "raw" directory exists.
+if [[ ! -d raw && ! -d cr2 && ! -d RAW && ! -d CR2 ]]; then
+  printf "%s\n"  "++ ERROR: raw directory name not found. One of: raw, RAW, cr2, CR2"
+  printf "%s\n"  "   This script expects raw directory where .CR2 files are found."
+  error="TRUE"
+else
+    if [[ -d raw ]];then
+        rawDir=raw
+    elif [[ -d RAW ]];then
+        rawDir=RAW
+    elif [[ -d cr2 ]];then
+        rawDir=cr2
+    elif [[ -d CR2 ]];then
+        rawDir=CR2
+    fi
+    if [ "$debug" == "TRUE" ]; then
+        printf "%s\n" "raw directory .............. $rawDir"
+    fi
+fi
+
+if [[ ${error} == "TRUE" ]]; then
+  printf "%s\n"  "++ Now exiting ...."
+  exit 2                            # Error 
+fi
+
+rawCount=$(ls ${rawDir} | wc -l)
+printf -v rawCount "%d" ${rawCount}
+    if [ "$debug" == "TRUE" ]; then
+        printf "%s\n" "RAW count .................. $rawCount"
+    fi
+
+if [[ ${rawCount} == 0 ]];then
+  printf "%s\n"  "Empty $rawDir directory. Exit."
+  printf "%s\n"  "   Since there are no raw files, no need to run."
+  printf "%s\n"  "Now exiting ...."
+fi
+
+for i in ${rawDir}/*; do
+    ((recordCount++))
+    fileName=$(basename ${i})
+    fileName=${fileName%%.*}               # Longest match from the end.
+    jpgFile="jpg/${fileName}.JPG"
+    rawFile="raw/${fileName}.CR2"
+    deleteCandidate="$i"
+
+    if [ "$debug" == "TRUE" ]; then
+        DashLine dashLineLength "-" " $recordCount " 10
+        printf "%s\n" "RAW file ......................... $fileName"
+        printf "%s\n" "JPG file ......................... $jpgFile"
+        printf "%s\n" "Delete candidate ................. $deleteCandidate"
+    fi
+
+    if [ ! -e ${jpgFile} ]; then
+        ((deleteCount++))
+        if [[ "$debug" == "TRUE" ]]; then
+            printf "%s\n" "Delete count ..................... $deleteCount"
+            printf "%s\n" "++ JPG not Found: DELETE RAW"
+        fi
+        if [[ ${deleteCount} == 1 ]]; then
+            printf "%s\n" "#!/bin/bash"
+            printf "%s\n"
+            printf "%s\n" "# This file Created by: $progName, ver $progVer"
+            printf "%s\n" "# Grant execute permission to this file and execute."
+            printf "%s\n"
+
+            # The executing script will output this so the user knows what is
+            # happening.
+            printf "%s\n" "printf \"%s\n\" "
+            printf "%s\n" "printf \"%s\n\" \"Let's delete those unwanted RAW files .......\" "
+            printf "%s\n" "printf \"%s\n\" "
+        fi
+
+        printf "%s\n" "printf \"%s\n\" \"Remove .....$deleteCandidate\" "
+        printf "%s\n" "rm $deleteCandidate"
+    else
+        if [[ "$debug" == "TRUE" ]]; then
+            printf "%s\n" "++ JPG found. Leave RAW file"
+        fi
+    fi
+
+
+done            # while read recordID  ...
+if [[ ${deleteCount} > 0 ]]; then
+    printf "%s\n"
+    printf "%s\n" "# $deleteCount files to delete"
+    # The executing script will output this so the user knows what is
+    # happening.
+    printf "%s\n" "printf \"%s\n\" "
+    printf "%s\n" "printf \"%s\n\" \"$deleteCount files deleted.\" "
+fi
+
+# ----------------------------------------
+# ----------------------------------------
+  exit 0  # Without this, the comment section will execute and error out.
+# ----------------------------------------
+# ----------------------------------------
+
+-----------------
+-- Description --
+-----------------
+The Problem
+  When taking photos, the camera generates both raw (.CR2) and .JPG files. The
+  raw files are much larger than the JPG files. Viewers run much faster
+  rendering the JPG files than the raw files, so, I tend to view JPG files.
+  While viewing the files, I use the viewer to delete some of the JPG images.
+  Don't want to keep all the images captured. When a JPG is deleted, the
+  corresponding raw files should also be deleted.
+
+This script examines both the jpg and the raw directory. Whenever a raw (.CR2)
+file exists, but a corresponding .JPG does not exist, generate a rm() command
+to remove the raw file. This is far easier, and FAR less error prone, than me
+manually deleting the pair of raw and JPG files. Pipe the output into a file,
+give it execute permission, and the raw files are easily and reliably deleted.
+
+-------------
+-- ToDo    --
+-------------
+- Make the user CWD be the parent to the jpg and raw directories, instead of 
+  CWD = "raw" directory. It makes the script more symetric. Better asthetics?
+
+-------------
+-- History --
+-------------
+
+----------------------------------------------------------------------
+  2018-08-07
+  Version 2.2
+----------------------------------------------------------------------
+- Added a printf to the executable file output by this script.
+  Lets the user know what file is being deleted as the script
+  is running.
+- Minor changes to formatting of output
+
+----------------------------------------------------------------------
+  2018-06-20
+  Version 2.0
+----------------------------------------------------------------------
+- CWD is now expected to be the parent of the raw and jpg directories.
+- This script now produces a shell script that can be executed. The output
+  can be redirected into a file. Grant execute permission to the file,
+  and execute, to remove the unwanted raw files.
+- Look for raw directory: raw, RAW, cr2, CR2
+- Error checking for raw directory
+- Look for jpg directory: jpg, JPG
+- Error checking for jpg directory
+- Verify that there are files in the raw directory and execute if > 1.
+
+----------------------------------------------------------------------
+  2018-06-17
+  Version 1.0
+----------------------------------------------------------------------
+First functioning version.
+CWD must be a "raw" directory. Will change in a future version.
+

@@ -1,0 +1,242 @@
+#! /Users/thedrub/anaconda3/bin/python
+
+# ----------------------------------------------------------------------
+# Libraries
+# ----------------------------------------------------------------------
+import re
+import os
+import sys
+from optparse import OptionParser
+
+# ----------------------------------------------------------------------
+# Files
+# ----------------------------------------------------------------------
+INPUT_FILE = "/Users/thedrub/sync_synology/doc/journal/work/journal_work.txt"
+
+# ----------------------------------------------------------------------
+# Constants
+# ----------------------------------------------------------------------
+# "debug" is a debugging tool. Not really constant.
+debug = True
+debug = False
+
+PROG_CONFIG = \
+    {"name"          : os.path.basename(sys.argv[0]), \
+     "maj_ver"        : "2", \
+     "min_ver"        : "1", \
+    }
+PROG_CONFIG["ver"] = PROG_CONFIG["maj_ver"] + "." + PROG_CONFIG["min_ver"]
+
+if debug :
+    print(f"++ Prog Name ...................... {PROG_CONFIG['name']}")
+    print(f"++ Prog maj ver ................... {PROG_CONFIG['maj_ver']}")
+    print(f"++ Prog min ver ................... {PROG_CONFIG['min_ver']}")
+    print(f"++ Prog ver ....................... {PROG_CONFIG['ver']}")
+
+# The Regular Expressions (RE) for parsing
+RE_START_DAY = "^D::"
+RE_TOPIC     = "^Topic::"
+
+# ----------------------------------------------------------------------
+# Globals
+# ----------------------------------------------------------------------
+linePtr = 0    # The "contents" list will index from 0
+
+
+# --------------------------------------------------
+def Process_File (line_ptr, days, verboseHeaders) :
+# --------------------------------------------------
+
+    if debug :
+        funcName = sys._getframe().f_code.co_name
+        print(f"++++ {funcName} ++++++++++++++++++++")
+        print("++ line_ptr ............. " + str(line_ptr))
+        print("++ days ................. " + str(days))
+        print("++ verboseHeaders ....... " + str(verboseHeaders))
+
+        content[line_ptr] = content[line_ptr].rstrip('\r\n')
+
+    day_counter = 1
+    for i in range(1, (days + 1)) :
+        if debug :
+            print("++ day_counter .......... " + str(day_counter))
+
+        # When displaying the D:: record, use [line_ptr+1] value to display the
+        # line number. "content" is indexed from 0. 
+        content[line_ptr] = content[line_ptr].rstrip('\r\n')
+        print ("======== [" + str(line_ptr+1) + \
+            "] ================================== " + \
+            content[line_ptr]) 
+
+        while True :
+            # Loop break when a D:: record is found.
+            # While in the current day, print each Topic:: record
+
+            line_ptr += 1   # Move to the next line.
+            # Strip trailing EOL from current line.
+            content[line_ptr] = content[line_ptr].rstrip('\r\n')
+
+            if debug :
+                print("++ line_ptr ............. " + str(line_ptr))
+
+            if re.search(RE_TOPIC, content[line_ptr]) :
+                # Found a RE_TOPIC record.
+                # Replace "::" with ":" in the Topic:: record.
+                content[line_ptr] = content[line_ptr].replace("::",":")
+
+                # Print the "Topic::" line
+                if verboseHeaders :
+                    print ("[" + str(line_ptr) + "] " + content[line_ptr])
+                else :
+                    print ("- " + content[line_ptr])
+
+                if verboseHeaders :
+                    # For a "full" report, print the next 3 lines
+                    # "Host::", "Inernal Staff", and "Client Staff::" lines
+                    for counter in  range(1, 4) :
+                        line_ptr += 1   # Move to the next line.
+                        content[line_ptr] = content[line_ptr].rstrip('\r\n')
+                        content[line_ptr] = content[line_ptr].replace("::",":")
+                        print ("[" + str(line_ptr) + "] " + content[line_ptr])
+                    print(f"----------------------------------------------------------------------")
+
+                if debug :
+                    print ("Topic [" + str(line_ptr + 1) + "]: - " + content[line_ptr])
+
+            if re.search(RE_START_DAY, content[line_ptr]) :
+                # Found a RE_START_DAY record.
+                # Exit this inner while loop that scans line-by-line.
+                if debug :
+                    print ("++ D:: match [" + str(line_ptr+1) + "]: " + content[line_ptr])
+
+                day_counter += 1    # A record was found.
+                break   # End while when a RE_START_DAY is found
+
+                # Continue with  lines within this D:: interval
+
+        # End for i in range
+
+    return()    # End def
+
+# --------------------------------------------------
+def PrintExitMesg () :
+# --------------------------------------------------
+    funcName = sys._getframe().f_code.co_name
+    if debug :
+        print(f"++++ {funcName} ++++++++++++++++++++")
+
+    print(f"{PROG_CONFIG['name']}, v{PROG_CONFIG['ver']}")
+
+
+# ----------------------------------------------------------------------
+# Main MAIN main
+# ----------------------------------------------------------------------
+
+if __name__ == '__main__' :
+
+    # Initialize the options parser
+    parser = OptionParser()
+    parser.add_option("-c", type="int", dest="day_count", \
+                  help = "Display records for this many days")
+
+    # Could not get this to work. Grrrrr. Irritating.
+    parser.add_option('-d', action ='store_true', dest='debug', \
+                    help = 'Set debug mode')
+    #parser.set_defaults(debug = False)
+
+    parser.add_option('-f', action = 'store_true', default = False,\
+                        dest = "fullHeaders",
+                        help = 'Display full headers')
+
+    # Collect any supplied options.
+    (options, args) = parser.parse_args()
+
+    debug = options.debug
+
+    # Load the file contents
+    FD_INPUT = open(INPUT_FILE, 'r')
+    content = FD_INPUT.readlines()
+
+    if debug :
+        print("++ options ............." + str(options))
+
+    # Set default number of days to one
+    if options.day_count == None :
+        options.day_count = 1
+
+    if debug :
+        print("++ Display records for " + str(options.day_count) + " days.")
+
+    # Get to the first D:: record. Skip the file's header section.
+    while True :
+        if re.search(RE_START_DAY, content[linePtr]) :
+            break
+        linePtr += 1
+
+    # Any initial lines in the input file have been skipped. 
+    # There could be an arbitrary number of lines preceeding the
+    # first day record.
+
+    if debug :
+        print("++ options ............." + str(options))
+
+    Process_File(linePtr, options.day_count, options.fullHeaders)
+
+    #PrintExitMesg() # Don't want extra output. Shows up in files.
+
+    exit()
+
+'''
+# ----------------------------------------------------------------------
+# TODO ToDo todo
+# ----------------------------------------------------------------------
+ToDo: It is assumed to grab the following 3 lines after the first Topic::
+    line is found. We should instead print an arbitrary number of header
+    lines, until the header end line is found.
+
+    Should instead ....
+    Parse the next line. 
+    If it is another Topic:: break the loop and start the outside parse
+    Otherwise, print the header section
+    Until the header end if found
+
+# ----------------------------------------------------------------------
+# History
+# ----------------------------------------------------------------------
+# --------------------------------------------------
+# topics, Ver: 2.1
+# 2022-12-27
+# --------------------------------------------------
+- Add
+    if __name__ == '__main__' :
+- Adjust indents
+
+# --------------------------------------------------
+# topics, Ver: 2.0
+# 2022-12-21
+# --------------------------------------------------
+- Added the -f option for the full header.
+- Added the -d option for debug output
+
+# --------------------------------------------------
+# topics, Ver: 1.1
+# 2022-12-21
+# --------------------------------------------------
+- Change constants to the all caps convention
+- Add PrintExitMesg
+- Clean out some cruft
+- Add some debug statements
+
+# --------------------------------------------------
+# topics, Ver: 1.0
+# --------------------------------------------------
+Initial version
+
+Usage: topics [options]
+
+Options:
+  -h, --help    show this help message and exit
+  -c DAY_COUNT  Display records for this many days.
+
+
+'''

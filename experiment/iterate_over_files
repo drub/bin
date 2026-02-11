@@ -1,0 +1,38 @@
+#!/bin/bash
+
+readonly origIFS=${IFS}
+readonly fileList="\
+${HOME}/cloud_storage/Dropbox (cPrime Inc.)/for David Bacon/cPrime.txt\
+:${HOME}/Sync/Work/Agile/agile.txt\
+"
+
+#fileList="frog1::frog2::frog3"
+#fileList="file1:file2:file3"
+
+echo "  fileList ...................." $fileList
+
+function FileOperation () {
+    echo "++ In FileOperation"
+    ls -l $1
+}
+
+
+IFS=:
+for fileName in $fileList; do
+printf "%s\n"  "++----------------------------------------------------++"
+    printf "fileName .................... %s\n" $fileName
+    if [ -f $fileName ]; then
+        printf "%s\n" "Target file ................. .$fileName."
+        FileOperation $fileName
+    else
+        printf "%s\n" "Target file not regular ..... .$fileName."
+        FileOperation $fileName
+        #ls -l $fileName
+        #head -5 $fileName
+    fi
+
+done
+unset IFS
+
+exit
+

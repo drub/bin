@@ -1,0 +1,206 @@
+#! /bin/bash
+
+unitTests="TRUE"     # TRUE: Run this file as a program.
+unitTests="FALSE"    # FALSE: Source this within another script.
+
+# ----------------------------------------
+  function DashLine () {
+# ----------------------------------------
+# Parameters
+#   $1  Required. Length of the dashed line.
+#   $2  Optional. The character to use for the line. Default = "-"
+#       It is wise to pass as a string, e.g. in quotes
+#
+#   The next 2 parameters are optional but must be used together.
+#   $3  Optional. A string to place in the dashed line
+#       It is wise to pass as a string, e.g. in quotes. Imperative if the
+#       string contains spaces.
+#   $4  The character location where $3 should start.
+#   
+# Globals used
+#
+# ----------------------------------------
+# Display debug info
+  local debug="TRUE"
+  local debug="FALSE"
+
+  local countChr=$1         # Required. If only param, a "-" is used.
+  local lineChr=$2          # Optional. Required to use the following params.
+  local displayStr=$3       # Optional. The string to place within the line.
+  local displayStrStart=$4  # Optional. The character position for displayStr.
+
+  local funcName=${FUNCNAME[0]}
+  local displayStrLen=${#displayStr}
+  local postSrtLen
+  local outputLine
+
+  (( postStrLen=countChr-displayStrStart-displayStrLen+1+1 ))
+
+  if [[ $countChr == "" ]]; then
+    printf "%s\n" "ERROR: func $funcName: Integer value required but not supplied."
+    return 1
+  fi
+
+  if [[ $lineChr == "" ]]; then
+    # No $lineChr supplied, so Use the default character, a "-"
+    lineChr="-"
+  fi
+
+  if [ "$debug" == "TRUE" ]; then
+    # DEBUG information for the script.
+    printf "%s\n"  "  ++ DashLine: arg 1 ............. .$1."
+    printf "%s\n"  "  ++ DashLine: arg 2 ............. .$2."
+    printf "%s\n"  "  ++ DashLine: arg 2 size ........ .${#2}."
+    printf "%s\n"  "  ++ DashLine: arg 3 ............. .$3."
+    printf "%s\n"  "  ++ DashLine: arg 3 size ........ .${#3}."
+    printf "%s\n"  "  ++ DashLine: arg 4 ............. .$4."
+    printf "%s\n"  "  ++ DashLine: countChr .......... .$countChr."
+    printf "%s\n"  "  ++ DashLine: lineChr ........... .$lineChr."
+    printf "%s\n"  "  ++ DashLine: displayStr ........ .$displayStr."
+    printf "%s\n"  "  ++ DashLine: displayStrStart ... .$displayStrStart."
+    printf "%s\n"  "  ++ DashLine: displayStrLen ..... .$displayStrLen."
+    printf "%s\n"  "  ++ DashLine: postSrtLen ........ .$postStrLen."
+  fi
+
+# printf -v line '%*s' "$countChr" # Build a line with $countChr spaces.
+
+  if [[ $displayStrStart == "" ]]; then
+    # Build a line with $countChr spaces.
+    #printf "Print with countChr  chars\n" #debug
+    printf -v line '%*s' "$countChr" 
+
+    if [ "$debug" == "TRUE" ]; then
+        printf "%s\n" 123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+
+    fi
+
+    # Substitute the spaces with a lineChr character.
+    printf "%s\n"  ${line// /${lineChr}}
+
+
+  else
+    #printf "Print with displayStrStart chars\n" #debug
+
+    # Generate the characters before the string
+    for ((i=1;i<displayStrStart;i++)); do
+      outputLine="${outputLine}${lineChr}"
+    done
+
+    # Append the string.
+    outputLine="${outputLine}${displayStr}"
+
+    # Add the characters after the string
+    for ((i=1;i<postStrLen;i++)); do
+      outputLine="${outputLine}${lineChr}"
+    done
+
+    # Print the line.
+    if [ "$debug" == "TRUE" ]; then
+        printf "%s\n" 123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+
+    fi
+
+    printf "%s\n" "${outputLine}"
+  fi
+
+
+
+  # Substitute the spaces with a lineChr character.
+  # printf "%s\n"  ${line// /${lineChr}}
+}
+
+
+# ----------------------------------------
+# ----------------------------------------
+# main Main MAIN
+# ----------------------------------------
+# ----------------------------------------
+
+
+if [[ $unitTests == "TRUE" ]]; then
+
+    # Unit tests for the DashLine function.
+    
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 10\n"
+    DashLine 10
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 20\n"
+    DashLine 20
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine <no parameter supplied>\n"
+    DashLine
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 40\n"
+    DashLine 40
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 50 o\n"
+    DashLine 50 o
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 50 x \"one two\"\n"
+    DashLine 50 = " one two " 10
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 60 \"|\" \" conrec \"\n"
+    DashLine 60 "|" " conrec " 30
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 70 - \" frogfanny \"\n"
+    DashLine 70 - " frogfanny " 30
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 20\n"
+    DashLine 20
+
+    printf "\n"
+    printf "<><><>   Test Case    <><><><><><><><><<><><><><><><><><><>><><><><><><><><><><>\n"
+    printf "DashLine 10 |\n"
+    DashLine 10 "|"
+
+    exit
+fi 
+
+
+# ----------------------------------------
+# ----------------------------------------
+# exit 0  # Without this, the comment section will execute and error out.
+# ----------------------------------------
+# ----------------------------------------
+
+# ----------------------------------------
+#  ToDo
+# ----------------------------------------
+
+history=' \
+------------- \
+-- History -- \
+------------- \
+'
+
+history=' \
+---------------------------------------------------------------------- \
+  2018-06-20 \
+  Version 2.0 \
+---------------------------------------------------------------------- \
+- Made debug a local var. When a sourcing script uses debug, debug mode is not \
+  set in this context. \
+- Created the unitTest variable. Set TRUE to run the unit tests, following \
+  changes. \
+- Created this History section. Place text in variable so it is not executed. \
+  Cannot make a comment cuz then cannot cut and paste into a git commit \
+  comment. \
+ \
+ \
+'

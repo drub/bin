@@ -1,0 +1,196 @@
+#! /bin/bash
+
+# ----------------------------------------
+# Constants
+# ----------------------------------------
+readonly origIFS=$IFS
+readonly progVer="2.4"
+readonly dashLineLength=60
+readonly uninitialized="UNINITIALIZED"
+#readonly inputFile="/Users/thedrub/cloud_storage/Dropbox (cPrime Inc.)/for David Bacon/cPrime.txt"
+readonly inputFile="/Users/thedrub/Sync/doc/journal/work/work_journal_file.txt"
+
+# ----------------------------------------
+# Globals
+# ----------------------------------------
+debug="TRUE"    #debug
+debug="FALSE"   #debug
+recordCount=0
+firstLinePrinted="FALSE"
+
+# ----------------------------------------
+# Libraries
+# ----------------------------------------
+libList="${HOME}/bin/lib/dashline"
+
+for i in $libList; do
+    if [[ -r $i ]]; then    # Does it exist?
+        . $i                # Source the library file.
+    else
+        printf "%s\n" "ERROR: Library file not found. Could not source library file."
+        printf "%s\n" "File: $i"
+        exit
+    fi
+done
+
+# ----------------------------------------
+# ----------------------------------------
+# main Main MAIN
+# ----------------------------------------
+# ----------------------------------------
+
+if [ "$debug" == "TRUE" ]; then
+  # DEBUG information for the script.
+  echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+  echo "++ inputFile .................... .$inputFile."
+  echo "++ dashLineLength ............... .$dashLineLength."
+fi
+
+# Set the delimeter for parsing the timerec records.
+IFS=":"
+
+grep "TIME::" $inputFile |\
+  while read recordID junk recordVer junk dayOfWeek junk Date junk startTime junk endTime junk elapsedTime junk client junk stateStr junk comment junk remainder
+  do
+    recordCount=$((recordCount+1))
+
+    if [ "$debug" == "TRUE" ]; then
+      # DEBUG information for each record.
+      echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+      echo "++ recordID ..................... .$recordID."
+      echo "++ recordVer .................... .$recordVer."
+      echo "++ dayOfWeek .................... .$dayOfWeek."
+      echo "++ Date ......................... .$Date."
+      echo "++ startTime .................... .$startTime."
+      echo "++ length startTime ............. .${#startTime}."
+      echo "++ endTime ...................... .$endTime."
+      echo "++ length endTime ............... .${#endTime}."
+      echo "++ elapsedTime .................. .$elapsedTime."
+      echo "++ length elapsedTime ........... .${#elapsedTime}."
+      echo "++ client ....................... .$client."
+      echo "++ stateStr ..................... .$stateStr."
+      echo "++ comment ...................... .$comment."
+      echo "++ remainder .................... .$remainder."
+
+    fi
+      if [[ "$recordVer" == "4.0" ]]; then
+
+        if [[ ${#startTime} = 2 ]] || [[ ${#endTime} = 2 ]] || [[ ${#elapsedTime} = 2 ]]; then
+          # String length should be 5. If it is only 2 characters, then
+          # one of the time values entered in the timerec record  was probably
+          # in the format nn:nn. It should be nn.nn.   This is an error.
+          # Use a dot delimter, not a colon.
+          printf "\n"
+          printf " WARNING: Error likely.\n"
+          printf "   Record date ...... $Date\n"
+          printf "   Error likely in at least one of:: START, END, ELAPSED.\n"
+          printf "   One of the time values had a length of only 2. Should be 5.\n"
+          printf "   This is an indicator that the wrong format was used.\n"
+          printf "   A \":\" was used instead of \".\"\n"
+          printf "\n"
+        fi
+
+        if [[ "$stateStr" == "new" ]]; then
+          # A qualified record has been found. Send to STDOUT.
+
+          # Need to print the top dashed line for the first displayed
+          # record. Each record displayed has a following dashed line. This
+          # creates a balanced top and bottom dash line between records.
+          if [[ $firstLinePrinted == "FALSE" ]]; then
+            firstLinePrinted="TRUE"
+            DashLine $dashLineLength
+          fi
+
+          printf " Client ...... $client\n"
+          printf " Day ......... $dayOfWeek, $Date\n"
+          printf " Duration .... $elapsedTime      Start: $startTime      End: $endTime\n"
+
+          if [[ $comment != "COMMENT" ]]; then
+            printf " Comment ..... $comment\n"
+          fi
+
+          if [[ $remainder != "" ]]; then
+            printf " Remainder ... $remainder\n"
+          fi
+
+          DashLine $dashLineLength
+        fi        # if [[ $stateStr == "new" [[; then
+      fi          # if [[ "$recordVer" == "4.0" ]]; then
+  done            # while read recordID  ...
+
+# ----------------------------------------
+# ----------------------------------------
+  exit 0  # Without this, the comment section will execute and error out.
+# ----------------------------------------
+# ----------------------------------------
+
+
+-------------
+-- ToDo    --
+-------------
+- Get rid of using grep(). Parse the file line by line. Will make possible
+  identifying the source file line number for error identification and
+  reporting.
+
+
+-------------
+-- History --
+-------------
+
+# ----------------------------------------------------------------------
+# 2018-06-15
+# Version 2.4
+# Compatible with timerec version 4.0
+# ----------------------------------------------------------------------
+- Now uses the DashLine function in a library file.
+- Add section to load libraries. Test that the lib file exists and is readable.
+  If so, source the file.
+- Remove the local DashLine function.
+- Added these comments in the wrong location.
+- Corrected the script version number to 2.4 for this change set.
+  The version in the script was not updated to 2.3 as the last change set
+  described. Grrrr
+
+# ----------------------------------------------------------------------
+# 2018-06-08
+# Version 2.3
+# Compatible with timerec version 4.0
+# ----------------------------------------------------------------------
+
+------------------------------------------------------------
+ Client ...... FireEye
+ Day ......... Mon, 2018-06-04
+ Duration .... 08.00      Start: 08.00      End: 18.00
+------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+# 2018-05-14
+# Version 2.2
+# Compatible with timerec version 4.0
+# ----------------------------------------------------------------------
+- Restructured the logic to accommodate a WARNING message. Trying to detect
+  when the ":" is used in the time entered. Should only use a ".". This
+  represents a data entry error when I manually enter START, END, and ELAPSED
+  values in the timerec. This warning should help me recognize the error.
+  If any of START, END, or ELAPSED has lenght = 2, then it is a data entry
+  error. Since IFS = :, read will parse the value into the first 2 characters.
+- Create a DashLine function. Prints a variable length dashed line.
+
+# ----------------------------------------------------------------------
+# 2018-05-11
+# Version 2.1
+# Compatible with timerec version 4.0
+# ----------------------------------------------------------------------
+- Minor cleanup. No functional changes.
+- Added a constant for the input file name
+- Added debug output to display the input file name
+
+# ----------------------------------------------------------------------
+# 2018-05-11
+# Version 2.0
+# Compatible with timerec version 4.0
+# ----------------------------------------------------------------------
+- The 1.0 version was a simple grep() piped into another grep()
+- This version more elaborately parses time recoreds and displays records in
+  a much more easily read format. Much easier to read and use when logging
+  hours.

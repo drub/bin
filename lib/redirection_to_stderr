@@ -1,0 +1,5 @@
+
+echo "This is going to stderr" >&2
+
+printf "%\n" "This is going to stderr" >&2
+

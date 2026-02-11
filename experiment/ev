@@ -1,0 +1,231 @@
+#!/Users/thedrub/anaconda3/bin/python
+
+print("ev")
+# ----------------------------------------------------------------------
+# Libraries
+# ----------------------------------------------------------------------
+import re
+import os
+import sys
+from optparse import OptionParser
+
+# ----------------------------------------------------------------------
+# Globals
+# ----------------------------------------------------------------------
+debug = False
+linePtr = 0  # The input_file list will index from 0
+
+# ----------------------------------------------------------------------
+# Files
+# ----------------------------------------------------------------------
+HOME = os.environ['HOME']  # Use the $HOME env variables
+INPUT_FILE = "/Users/thedrub/sync_synology/doc/journal/work/journal_work.txt"
+INPUT_FILE = "/Users/thedrub/bin/event_sample"
+
+# ----------------------------------------------------------------------
+# Constants
+# ----------------------------------------------------------------------
+prog_config = \
+    {"name": os.path.basename(sys.argv[0]),
+     "maj_ver": "0",
+     "min_ver": "1",
+     "sep_ln_len": 80,  # Dashed line between displayed recs
+     "plus_ln_len": 50,  # Line preceeding an error message
+     "event_6.0_tokens": 99,
+     }
+
+# The Regular Expressions (regex) for parsing
+REGEX_EVENT = "^EVENT::"
+double_colon = "::"
+
+
+# ----------------------------------------------------------------------
+# Classes
+# ----------------------------------------------------------------------
+class Event():
+    count = 0
+
+    def __init__(self, sourceLine,
+                 topic, host, internalStaff, clientStaff,
+                 recVer, weekDay, date, time, description):
+        Event.count += 1
+
+        self.sourceLine = sourceLine
+        self.date = date
+        self.topic = topic
+        self.host = host
+        self.internalStaff = internalStaff
+        self.clientStaff = clientStaff
+        self.recVer = recVer
+        self.weekDay = weekDay
+        self.date = date
+        self.time = time
+        self.description = description
+
+    def printevent(self, eventNo):
+        print(f"++ Instance topic ................ {self[eventNo].topic}")
+
+
+
+
+
+# ----------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------
+
+def PrintSummary():
+    print("")
+
+    print(f"++ ++++++++++++++++++++++++++++++++++++++++++++")
+    print(f"++ +++ Instance count: {Event.count} +++++")
+    print(f"++ ++++++++++++++++++++++++++++++++++++++++++++")
+
+    for event in events:
+        print(f"++ Instance topic ................ {event.topic}")
+        print(f"++ Instance host ................. {event.host}")
+        print(f"++ Instance internal staff ....... {event.internalStaff}")
+        print(f"++ Instance client staff ......... {event.recVer}")
+        print(f"++ Instance client staff ......... {event.weekDay}")
+        print(f"++ Instance client staff ......... {event.date}")
+        print(f"++ Instance client staff ......... {event.time}")
+        print(f"++ Instance client staff ......... {event.description}")
+        print(f"++ Source line ................... {event.sourceLine}")
+        print(f"++ +++++++++++++++++++++++++++++++++++++++++++")
+
+    #print(f"events var type -->>> {type(events)}") #debug
+
+    FD_INPUT.close()
+
+
+# ----------------------------------------------------------------------
+# Main MAIN main
+# ----------------------------------------------------------------------
+
+if __name__ == '__main__':
+
+    # Load the file contents into input_file
+    FD_INPUT = open(INPUT_FILE, 'r')
+    input_file = FD_INPUT.readlines()
+    input_file.insert(0, "Line 0 inserted")
+
+    fileLength = len(input_file) - 1
+    if debug:
+        print(f"++ ...............................")
+        print(f"++ File length ............ {fileLength}")
+        print(f"++ ...............................")
+        print('')
+
+    # Create a list in which to collect events
+    events = []
+    if debug:
+        print(f"events var type -->>> {type(events)}")  #debug
+
+    eventCounter = 0
+
+    while True:
+
+        linePtr += 1  # Advance one line
+        if debug:
+            print(f"+++++ Pre-test ............ line_ptr = {int(linePtr)}: fileLength = {int(fileLength)}")
+
+        # If not at EOF, then grab the next line.
+        if int(linePtr) <= int(fileLength):
+            line = input_file[linePtr].rstrip('\r\n')
+            line = line.lstrip(" ") # Discard leading spaces
+        else:
+        # At EOF, time to exit
+            PrintSummary()
+            events.printevent[3]
+            if debug:
+                exit(">>>>> EOF <<<<<")
+            else:
+                exit()
+
+        if debug:
+            #print(f"++ [{linePtr}] line ................... {line}", end='')  # No newline
+            print(f"++ line ................... [{linePtr}]: {line}")
+
+        # Use the regex to parse the current line
+        if re.search(REGEX_EVENT, line):
+            # Found an EVENT record. Should look something like this ...
+            eventLine = linePtr
+            eventCounter += 1  # debug.  Will be maintained in a class var
+            if debug:
+                print(f"++++ EVENT:: found! ....... [{linePtr}]: {eventCounter}")   #debug
+
+           # Parse the line on "::"
+            # EVENT::6.0::Sun::2023-11-19::12.48.57::EVENT::
+            line_list = re.split(double_colon, input_file[linePtr] )
+            if debug:
+                print(f"++ line_list ................ {line_list}")
+
+            record_version = line_list[1]
+            day_of_week = line_list[2]
+            date = line_list[3]
+            time = line_list[4]
+            description = line_list[5]
+
+            '''
+            Store the next 6 lines of the header section. 
+            There is one empty line.
+            There are 4 content lines.
+            The dashed line is the end of header syntax.
+            
+            Topic:: Topic string to EOL
+            Host::  Host string to EOL
+            Internal Staff:: Internal staff to EOL
+            Client Staff:: Client staff to EOL
+            # ----------
+           '''
+            # Step past the empty line.
+            linePtr += 1  # Advance one line
+
+            # Collect the event header lines in a list.
+            header = []     # Initialize or empty the list.
+            headerSize = 4
+            for header_line in range(headerSize):
+                linePtr += 1  # Advance one line
+                line_list = re.split(double_colon, input_file[linePtr])
+                headerField = line_list[1].rstrip('\r\n')
+                headerField = headerField.lstrip(' ')
+                if debug:
+                    print(f"++ headerField ............ [{linePtr}]: {headerField}")
+
+                header.append(headerField)
+
+            # Step past the end of header line.
+            linePtr += 1  # Advance one line
+            if debug:
+                line = input_file[linePtr].rstrip('\r\n')
+                print(f"++ EVENT body ............. [{linePtr}]: {line}")
+
+            if debug:
+                print(f"++ ==========================================================")
+                print(f"++ record_version ........... {record_version}")
+                print(f"++ day_of_week .............. {day_of_week}")
+                print(f"++ date ..................... {date}")
+                print(f"++ time ..................... {time}")
+                print(f"++ description .............. {description}")
+                for i in range(headerSize):
+                    print(f"++ header_line .......... [{i}] {header[i]}")
+                print(f"++ ==========================================================")
+
+            # Create a new Event instance and store
+            events.append( Event(eventLine,
+                                 header[0], header[1], header[2], header[3],
+                                 record_version, day_of_week, date, time, description))
+
+            # The EVENT body begins on the next line.
+            # The dashed line is the end of EVENT
+            linePtr += 1  # Advance one line
+            line = input_file[linePtr].rstrip('\r\n')
+            if debug:
+                print(f"++ EVENT body ............. [{linePtr}]: {line}")
+
+            while line != "# ----------------------------------------------------------------------":
+                linePtr += 1
+                line = input_file[linePtr].rstrip('\r\n')
+                if debug:
+                    print(f"++ EVENT body ............. [{linePtr}]: {line}")
+
+

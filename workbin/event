@@ -1,0 +1,197 @@
+#! /bin/bash
+
+readonly progVer="6.0"
+readonly employer="Internal"
+
+
+if [[ $# = 0 ]]; then
+	argStr="EVENT"
+else
+	argStr="$*"
+fi
+
+dashline="# ----------------------------------------------------------------------"
+headerEndLine="# ----------"    # 10 dashes
+
+dayStr=$(date "+%a")
+dateStr=$(date "+%Y-%m-%d")
+timeStr=$(date "+%H.%M.%S")
+
+
+printf "%s\n"
+printf "%s\n" "$dashline"
+printf "%s\n" "EVENT::$progVer::$dayStr::$dateStr::$timeStr::$argStr::"
+#printf "%s\n" "EVENT::$progVer::$dayStr::$datestr::\"${argSr[@]}\"::"
+#printf "%s\n" "Arg count ............... $#"    #debug
+printf "%s\n"
+printf "%s\n" "Topic:: "
+printf "%s\n" "Host:: "
+printf "%s\n" "${employer} Staff:: "
+printf "%s\n" "Client Staff:: "
+printf "%s\n" "$headerEndLine"
+printf "%s\n"
+printf "%s\n"
+printf "%s\n" "$dashline"
+printf "%s\n"
+
+exit	# This prevents anything following from being executed.
+
+
+### ======================================================================
+### History
+### ======================================================================
+
+----------------------------------------------------------------------
+ Ver 6.0
+ 2022.04.06
+----------------------------------------------------------------------
+- Add a heading section delimiter. $headerEndLine
+  Thinking of enhancing the "topics" script to output a full report of
+  events. Or output full headers, without the full event body.
+  "topics" curently only reports the Topic:: record.
+  The $headerEndLine will make parsing an event record easier. It will also
+  allow arbitrary entries in the header. There are times when additional header
+  information would be useful in generated reports.
+
+# ----------------------------------------------------------------------
+EVENT::6.0::Wed::2022-04-06::17.42.58::EVENT::
+
+Topic:: 
+Host:: 
+Internal Staff:: 
+Client Staff:: 
+# ----------
+
+
+# ----------------------------------------------------------------------
+
+
+----------------------------------------------------------------------
+ Ver 5.1
+ 2021.10.01
+----------------------------------------------------------------------
+- Forgot to include the $timeStr in the EVENT line. Doh!
+  Added back the $timeStr
+
+# ----------------------------------------------------------------------
+EVENT::5.1::Mon::2021-10-04::15.47.27::test test test::
+
+Topic:: 
+Host:: 
+Internal Staff:: 
+Client Staff:: 
+
+
+# ----------------------------------------------------------------------
+
+
+----------------------------------------------------------------------
+ Ver 5.0
+ 2021.10.01
+----------------------------------------------------------------------
+- Re-write the EVENT:: line to make it consistent with timerec
+EVENT::<prog version>::<day>::<date>::<remainder>
+- Remove "References::"
+  Never used. Extranious.
+
+# ----------------------------------------------------------------------
+EVENT::5.0::Fri::2021-10-01::TEST TEST TEST::
+
+Topic:: 
+Host:: 
+Internal Staff:: 
+Client Staff:: 
+
+
+# ----------------------------------------------------------------------
+
+
+----------------------------------------------------------------------
+ Ver 4.5
+ 2021.10.01
+----------------------------------------------------------------------
+- Change "Cprime Participants::" to "Internal Participants::"
+  This is so I can use it in non-Cprime contexts.
+- Change "Participants" to "Staff"
+  More concise.
+
+
+----------------------------------------------------------------------
+ Ver 4.4
+ 2020.10.16
+----------------------------------------------------------------------
+- Change ":" to "::". Should make later parsing easier.
+  Anticipate <field> :: <value> semantics.
+
+----------------------------------------------------------------------
+ Ver 4.3
+ 2020.10.14
+----------------------------------------------------------------------
+- Split the "Participants:" into "Cprime Participants" and "Client Particpants"
+- Add "References:"
+
+----------------------------------------------------------------------
+ Ver 4.2
+ 2018.06.22
+----------------------------------------------------------------------
+- Refactoring. Identical function
+
+----------------------------------------------------------------------
+ Ver 4.1
+ 2018.05.15
+----------------------------------------------------------------------
+ Added "Topic", "Host", and "Participants" lines.
+----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+EVENT::4.1::2018-05-16::19.43.41::PDT::Wed::EVENT::
+
+Topic: 
+Host: 
+Participants: 
+
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Ver 4.0
+# 2018.05.11
+# All dates should use "." seperators, like "11.30", not "11:30". This makes
+# parsing those dates much easier in other scripts.
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+EVENT::4.0::2018-05-11::16.21.52::PDT::Fri::Test event::
+
+
+# ----------------------------------------------------------------------
+
+
+
+# ----------------------------------------------------------------------
+# Ver 3.0
+# 2017.11.30
+# Add "::" field separators for easier parsing.
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+EVENT::3.0::2017-11-30::21:04:10::PST::Thu::EVENT::
+
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Ver 2.0
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+EVENT::2.0::2017-11-30 20:35:41 PST Thu::Standup::
+
+
+# ----------------------------------------------------------------------
+

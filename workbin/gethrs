@@ -1,0 +1,498 @@
+#!/Users/thedrub/anaconda3/bin/python
+
+# ----------------------------------------------------------------------
+# Libraries
+# ----------------------------------------------------------------------
+import pandas as pd
+import sys
+import csv
+import os
+from optparse import OptionParser
+from pathlib import Path
+
+# ----------------------------------------------------------------------
+# My Libraries
+# ----------------------------------------------------------------------
+lib_path = os.environ['HOME'] + "/bin/lib"
+sys.path.append(lib_path)
+from format_str import StrCol
+
+# ----------------------------------------------------------------------
+# Files
+# ----------------------------------------------------------------------
+HOME = os.environ['HOME'] # Use the $HOME env variable
+
+# ----------------------------------------------------------------------
+# Constants
+# ----------------------------------------------------------------------
+prog_config = \
+    {"name"          : os.path.basename(sys.argv[0]), \
+     "maj_ver"        : "2", \
+     "min_ver"        : "6", \
+     "sep_ln_len"     : 80,    # Dashed line between displayed recs \
+     "plus_ln_len"    : 50,    # Line preceeding an error message \
+     "rec_4.1_tokens" : 11, \
+     "env_var"        : "GETHRSPATH", \
+     "ofname"         : HOME + "/sync_synology/spool/gethrs_output.csv" \
+    }
+#"ofname"         : HOME + "/spool/gethrs_output.csv" \
+#/Users/thedrub/sync_synology/spool
+prog_config["ver"] = prog_config["maj_ver"] + "." + prog_config["min_ver"]
+
+# ----------------------------------------------------------------------
+# Intializations
+# ----------------------------------------------------------------------
+displayed_record_count = 0
+line_counter = 0
+
+# ----------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------
+
+# --------------------------------------------------
+def Display_file_info(f_list):
+# --------------------------------------------------
+# A debug function to display files used.
+    count = 0
+    if isinstance(f_list, list):
+        #print("++++++ Found list" ) #debug
+        for fname in f_list:
+            count += 1
+            base_str = "." * 100
+            tmp_str = StrCol(base_str, "++ Input file ", 0)
+            tmp_str = StrCol(tmp_str, fname, 25 )
+            print (tmp_str)
+    elif isinstance(f_list, str):
+        #print("++++++ Found str" ) #debug
+        base_str = "." * 100
+        tmp_str = StrCol(base_str, "++ Input file ", 0)
+        tmp_str = StrCol(tmp_str, f_list, 25 )
+        print (tmp_str)
+
+    #print("++ Count: " + str(count)) #debug
+    base_str = "." * 100
+    tmp_str = StrCol(base_str, "++ Output file ", 0)
+    tmp_str = StrCol(tmp_str, prog_config["ofname"], 25 )
+    print (tmp_str)
+
+# --------------------------------------------------
+def Display_tokens(token_list):
+# --------------------------------------------------
+    i = 0
+    for token in token_list:
+        print ("[{0:2}] ... {1}".format(i, token))
+        i += 1
+
+# --------------------------------------------------
+def Display_Record(token_list):
+# --------------------------------------------------
+# Record version: 4.1
+    line_length=80
+
+    scale = "+123456789" * 7
+    base_str = "." * 14 + " " * 60
+    col_1  = 0
+    data_1 = 15
+    col_2  = 28
+    data_2 = 35
+    col_3  = 45
+    data_3 = 52
+    col_4  = 58
+    data_4 = 65
+
+    tok_line      = 0
+    tok_rec_type  = 1
+    tok_rec_ver   = 2
+    tok_day       = 3
+    tok_date      = 4
+    tok_start     = 5
+    tok_stop      = 6
+    tok_duration  = 7
+    tok_client    = 8
+    tok_state     = 9
+    tok_comment   = 10
+    tok_remainder = 11
+
+    # Display a dashed line with the record version.
+    line_str = "-" * prog_config["sep_ln_len"]
+    line_str = StrCol(line_str, " v ", 70)
+    line_str = StrCol(line_str, token_list[tok_rec_ver], 72)
+    line_str = StrCol(line_str, " ", 75)
+    print(line_str)
+
+    # Line 1
+    tmp_str = StrCol(base_str, " Client ", col_1)
+    tmp_str = StrCol(tmp_str, token_list[tok_client], data_1)
+
+    tmp_str = StrCol(tmp_str, "Line: ", col_3)
+    tmp_str = StrCol(tmp_str, str(token_list[tok_line]), data_3)
+
+    tmp_str = StrCol(tmp_str, "State: ", col_4)
+    tmp_str = StrCol(tmp_str, str(token_list[tok_state]), data_4)
+    print(tmp_str)
+
+    # Line 2
+    tmp_str = StrCol(base_str, " Date ", col_1)
+    tmp_str = StrCol(tmp_str, token_list[tok_date], data_1)
+
+    tmp_str = StrCol(tmp_str, "Day: ", col_2)
+    tmp_str = StrCol(tmp_str, token_list[tok_day], data_2)
+    print(tmp_str)
+
+    # Line 3
+    tmp_str = StrCol(base_str, " Duration ", col_1)
+    tmp_str = StrCol(tmp_str, token_list[tok_duration], data_1)
+
+    tmp_str = StrCol(tmp_str, "Start: ", col_2)
+    tmp_str = StrCol(tmp_str, token_list[tok_start], data_2)
+
+    tmp_str = StrCol(tmp_str, "Stop: ", col_3)
+    tmp_str = StrCol(tmp_str, token_list[tok_stop], data_3)
+    print(tmp_str)
+
+    # If there is content, display the Comment field.
+    if (token_list[tok_comment] != "") and (token_list[tok_comment] != "COMMENT"):
+        # This line is not column oriented. So not using SrtCol()
+        tmp_str = " Comment ..... " + token_list[tok_comment]
+        print(tmp_str)
+
+    # If there is content, display the Remainder field.
+    if token_list[tok_remainder] != "":
+        # This line is not column oriented. So not using SrtCol()
+        tmp_str = " Remainder ... " + token_list[tok_remainder]
+        print(tmp_str)
+
+# --------------------------------------------------
+def Closing_message(display_count, record_count):
+# --------------------------------------------------
+    base_str = "." * 24 + " "
+    data_col = 25
+
+    if display_count > 0:
+        print("-" * prog_config["sep_ln_len"])
+    
+        # Output the input file name.
+        tmp_str = StrCol(base_str, "Input file ", 0)
+        print(tmp_str, end = '')    # Supress newline)
+        print(input_file_list)
+
+        tmp_str = StrCol(base_str, "Records displayed ", 0)
+        print(tmp_str, end = '')    # Supress newline)
+        print(display_count)
+
+    if record_count == 0:
+        tmp_str = StrCol(base_str, "No records found.", 0)
+        print(tmp_str)
+    else:
+
+        tmp_str = StrCol(base_str, "Records recorded ", 0)
+        print(tmp_str, end = '')    # Supress newline)
+        print(record_count)
+
+        tmp_str = StrCol(base_str, "Output file ", 0)
+        print(tmp_str, end = '')    # Supress newline)
+        print( prog_config["ofname"])
+
+# --------------------------------------------------
+def Get_Env_File(fname):
+# --------------------------------------------------
+    if fname in os.environ:
+        # The ENV variable exists. Return the file list.
+        return (os.environ[fname])
+    else:
+        print("Error: Environment variable not set: " + fname)
+        print("Excecution halted ...")
+        exit()
+
+# ----------------------------------------------------------------------
+# Main MAIN main
+# ----------------------------------------------------------------------
+
+debug = True    #debug
+debug = False   #debug
+
+print ("")
+print (prog_config["name"]  + " " + prog_config["ver"]) # Banner line.
+
+input_file_list = Get_Env_File(prog_config["env_var"])
+
+#print("++++ " + input_file_list) #debug
+
+if debug :
+    print ('++ Number of arguments ....... ', len(sys.argv))
+    print ('++ Argument List:', str(sys.argv))
+    Display_file_info(input_file_list)
+
+# Initialize the options parser
+parser = OptionParser()
+parser.add_option("-a", action="store_true", dest="all", \
+                 help = "Display all records, regarless of state")
+parser.add_option("-c", type="int", dest="rec_count", \
+                 help = "Display only this number of records")
+
+# Collection the options passed.
+(opts, args) = parser.parse_args()
+
+#print("++ options ...") #debug
+#print(opts) #debug
+
+if opts.all :
+    print("++ Option: Display all records. Not filtered \"State\" field.")
+if opts.rec_count != None:
+    print("++ Option: Display " + str(opts.rec_count) + " records.")
+
+column_names=["lineno",\
+              "rec_type",\
+              "rec_ver",\
+              "day",\
+              "date",\
+              "start",\
+              "end",\
+              "duration",\
+              "customer",\
+              "rec_state",\
+              "comment",\
+              "remainder"]
+df = pd.DataFrame(columns = column_names)
+
+# for file in input_file_names:
+    #   if file.is_file():
+#          ( Get_time_records(file)
+#       else:
+    #       print("++ File not found. Continue execution. File: " + file)
+    #
+
+# def Get_time_records(file)
+with open(str(input_file_list), 'r') as in_fd:
+    for line in in_fd:
+        line = line.rstrip('\r\n') # Strip the trailing EOL
+        line_counter += 1
+
+        tokens = line.split("::")
+        token_count = len(tokens) # Count only the tokens from the input file.
+
+        if (tokens[0] == "TIME") :
+
+            # A "TIME" record was found.
+            # Process token for record version 4.1 only
+            # Deprecate earlier record versions with this new implementation
+
+            # Record the input file line number in the record.
+            tokens.insert(0, line_counter)
+
+            debug = False
+            if debug == True :
+                print ("+" * prog_config["SEP_LN_LEN"])
+                Display_tokens(tokens)
+
+            if token_count != prog_config["rec_4.1_tokens"] :
+                print ("+" * prog_config["sep_ln_len"])
+                print ("++ Line " + str(tokens[0]) + ". Bad record. Incorrect token count.")
+                print ("++ Expected " + str(prog_config["rec_4.1_tokens"]) + " tokens. " \
+                        + str(token_count) + " tokens were found")\
+                #print ("++ tokens: ", tokens) #debug
+                Display_tokens(tokens[1:]) # Don't print the first token.
+
+            else:
+                record_ver  = tokens[1]
+                record_state = tokens[9]
+
+                if (record_state == "new") or (opts.all) :
+
+                    if (opts.rec_count) and (displayed_record_count < opts.rec_count):
+                        Display_Record(tokens)
+                        displayed_record_count += 1
+
+                    elif not opts.rec_count :
+                        Display_Record(tokens)
+                        displayed_record_count += 1
+
+                # Add the tokens list to the end of the dataframe
+                df.loc[len(df)] = tokens
+
+# Write the dataframe to a CSV file.
+df.to_csv(prog_config["ofname"], index = False)
+
+#print("len(df): " + str(len(df))) #debug
+# return(displayed_record_count, records_stored)
+
+Closing_message(displayed_record_count, len(df))
+
+exit()
+
+# ----------------------------------------------------------------------
+# End END end
+# ----------------------------------------------------------------------
+
+
+'''
+# ----------------------------------------------------------------------
+# TODO ToDo todo
+# ----------------------------------------------------------------------
+
+- When multiple input files are processed, create multiple CSV files
+  Gotta figure out the output file naming scheme.
+
+- The whole CSV output file management needs to be designed.
+  Add a "-o <filename>" option to specify the CSV file name.
+  Otherwise file name like <yr>-<mo>-<day>_<sequence no>_gethrs.csv
+
+- Read a file list from the ENV file. Now, only a single file.
+
+- Add a -i <file> option. Read records from this file instead of the
+  ENV variable.
+
+- Default to writing to csv only records for the last N weeks 4?
+
+- Add a -w parameter, "csv count", that writes a fixed number of records
+  to the csv file.
+
+# ----------------------------------------------------------------------
+# History
+# ----------------------------------------------------------------------
+
+# --------------------------------------------------
+# gethrs Ver: 2.6
+# --------------------------------------------------
+# Change destination of the output file. Keep in in a sync'd location.
+# Was $HOME/spool
+# Now $HOME/sync_synology/spool
+
+# --------------------------------------------------
+# gethrs Ver: 2.5
+# --------------------------------------------------
+Record versions supported: 4.1
+
+Minor cleanup
+
+# --------------------------------------------------
+# Ver: 2.4
+# --------------------------------------------------
+Record versions supported: 4.1
+
+Added the input file name to Closing_message.
+Used StrCol() in a different way.
+
+Note: So far, this only consumes a single file. The ENV var could contain more
+than one file name in the future. This solution will then need to be revised.
+
+# --------------------------------------------------
+# Ver: 2.3
+# --------------------------------------------------
+Record versions supported: 4.1
+
+Added output path and file name to stdout when records are written.
+
+# --------------------------------------------------
+# Ver: 2.2
+# --------------------------------------------------
+Record versions supported: 4.1
+
+The problem: The COMMENT and REMAINDER fields were being truncated. They were
+being treated as data to be formatted into columns. Not appropriate. These
+fields can be long. They should be output to stdout full length. Makes it
+easier to copy and paste when entering time into Jira.
+
+No fix needed to the CSV. Full length field was already being written to the
+CSV file. No changes needed.
+
+Change the header messge displayed with "-a" option.
+
+# --------------------------------------------------
+# Ver: 2.1
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Changed Get_Input_Files to Get_Env_File. Better reflection of what it does.
+- There were multiple ways of identifying the output file name. Cleaned things
+  up to consistently use the prog_config structure: prog_config["ofname"]
+- Output file now writtend to the $HOME/spool directory. Was being scattered
+  all over the FS by writing to the CWD.
+
+# --------------------------------------------------
+# Ver: 2.0
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Fixed: Accidentally deleted the write to a CSV in some prior version.
+  Now properly writes the CSV again. Sheesh!
+- Lots of refactoring and cleaning.
+- Now reading the input file from an ENV variable.
+  For now, a single file is processed. In future versions, it will be a list.
+- Wrote a function for displaying input and output file information.
+- Added pseudo code for when multiple input files are read.
+- Added function Get_Input_Files to get file names from Env variable.
+
+# --------------------------------------------------
+# Ver: 1.6
+# --------------------------------------------------
+Record versions supported: 4.1
+
+Lots and lots of cleanup.
+- Added to prog_config and eliminated several constants
+- Created a Display_file function for debugging when an ENV var is implemented for file input
+- Added a record ver indicator to the dashed separator line
+- Simplified Main by creating a Closing_message function
+
+# --------------------------------------------------
+# Ver: 1.5
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Added a -c parameter, "count", that writes the count number of records to stdout.
+  Combined with -a and "count" number of records will be displayed, regardless
+  of the record state.
+
+# --------------------------------------------------
+# Ver: 1.4
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Implement the "-a" option. Display records regardless of record state.
+  - In the past, only records with state = "new" would be displayed on STDOUT
+  - Display all records discovered
+- Modify the STDOUT messages displayed
+  - Add the record state
+  - Modify the column value. Move column 3 to the left 5 spaces.
+
+# --------------------------------------------------
+# Ver: 1.3
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Changed the "Bad record" error message.
+- The line of "+" used for errors extended to 50.
+
+# --------------------------------------------------
+# Ver: 1.2
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Used argparse() to parse 2 arguments
+  - a  :: Display all records, not just rec state = "new"
+  - -c count  :: Display only this number of records.
+- Only parsed the paramters. Have not yet implemented the featues.
+
+# --------------------------------------------------
+# Ver: 1.1
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Added Display_Record to display output that is substantially similar to
+  the bash gethrs. Easier to read than printing a list.
+- Wrote a library file format_str.py
+  Includes SrtCol(str, str, int)
+- Wrote routine to print TIME records found to STDOUT.
+
+
+# --------------------------------------------------
+# Ver: 1.0
+# --------------------------------------------------
+Record versions supported: 4.1
+
+- Parses the input file for supported records
+- Writes to stdout records with record_state = "new"
+- Writes all TIME:: records to a csv file.
+  - Input file name hard coded
+
+'''

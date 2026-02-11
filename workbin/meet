@@ -1,0 +1,43 @@
+#! /bin/bash
+
+readonly progVer="1.0"
+readonly employer="Cprime"
+
+
+#if [[ $# = 0 ]]; then
+	#argStr="EVENT"
+#else
+	#argStr="$*"
+#fi
+
+dashline="# ----------------------------------------------------------------------"
+headerEndLine="# ----------"    # 10 dashes
+
+dayStr=$(date "+%a")
+#dateStr=$(date "+%Y-%m-%d")
+dateStr=$(date "+%m-%d")
+timeStr=$(date "+%H.%M.%S")
+
+
+#printf "%s\n"
+#printf "%s\n" "$dashline"
+printf "%s\n" "- MEET: $dateStr: num: "
+#printf "%s\n" "EVENT::$progVer::$dayStr::$dateStr::$timeStr::$argStr::"
+#printf "%s\n" "EVENT::$progVer::$dayStr::$datestr::\"${argSr[@]}\"::"
+#printf "%s\n" "Arg count ............... $#"    #debug
+#printf "%s\n"
+
+exit	# This prevents anything following from being executed.
+
+
+### ======================================================================
+### History
+### ======================================================================
+
+----------------------------------------------------------------------
+ Ver 1.0
+ 2022.11.28
+----------------------------------------------------------------------
+- Built specifically for needs at Visa
+
+# ----------------------------------------------------------------------

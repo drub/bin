@@ -1,0 +1,24 @@
+#! /bin/bash
+
+recordType="PCLIENT"
+entryVerStr="1.0"
+
+dayStr=$(date "+%a")
+dateStr=$(date "+%Y-%m-%d")
+timeStr=$(date "+%H:%M:%S")
+
+cat << EOF
+$recordType::1.0::First::Last::Source::email::
+EOF
+
+# ----------------------------------------------------------------------
+# History history HISTORY
+# ----------------------------------------------------------------------
+# "pclient" ---> Potential Client
+#
+# --------------------------------------------------
+# Ver 1.0
+# --------------------------------------------------
+# This script supports the data requirements when filing for WA state
+# unemployment benefits.
+#

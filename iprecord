@@ -1,0 +1,224 @@
+#!/bin/bash
+#
+# Record my ip number at a specified time interval.
+#
+
+# This script monitors the IP number value and detects changes.
+# 
+# It appends to a log file.
+# It writes 3 different record types to the log file.
+# - Header::  - A program header written when the program starts
+# - Change::  - Records the change in IP number.
+# - Reading:: - Records the IP number reading 
+
+# ----------------------------------------------------------------------
+# --- Constants ---
+# ----------------------------------------------------------------------
+readonly  args="$*"			# Save the command line args.
+readonly  arg1=$1
+
+# Program information
+readonly  progName=$(basename $0)
+readonly  progVer="01.06.10"
+#printf "++ args .................... %s\n" $args	#debug
+
+# Logical values. Use in numeric tests only. e.g. (( )) operations.
+readonly TRUE=1
+readonly FALSE=0
+
+# Interval lengths
+readonly  readingMinutesDefault=5	# The interval between IP readings
+readonly  retrySeconds=5		# The interval between retries
+
+# Log level
+# 1 - The default. Output Header:: and Change:: records.
+# 2 - Output Header::, Change::, and Reading:: records
+logLevel=1
+
+# All about curl()
+readonly  curlPATH="/opt/local/bin/curl"
+readonly  curlARGS="--verbose --silent --show-error --insecure"
+readonly  curlURL="http://whatismyip.org"
+
+# The ouput file. The log file.
+readonly  outputFile=${HOME}/spool/log/${progName}.log
+
+#printf "++ progName ................. %s\n" $progName	#debug
+#printf "++ args ..................... %s\n" $argNames	#debug
+
+# ----------------------------------------------------------------------
+# --- Global Variables ---
+# ----------------------------------------------------------------------
+lastKnownIP="UNITIALIZED"	
+readingCount=0			# The number times we have received the IP
+inquiryCount="UNINITIALIZED"	# Counts how many time we had to ask the
+				# web site for the IP. Counts retries.
+#sleepSeconds=$(( $sleepMinutes * 60 ))
+
+# ----------------------------------------------------------------------
+
+
+# ---------------------------------------- 
+  function ProgUsage () {
+# ---------------------------------------- 
+  printf "
+$progName [ Interval ]
+
+where:
+    Interval - The number of minutes between IP readings.
+
+Record the current IP number, as reported by an external web site. The
+reported number is the IP of the WAN side of the router.
+
+Output format:
+<sequence count> <retry> <timestamp> -- <IP Number>
+
+where
+    <sequence count> - The number of times an IP number has been acquired.
+    <retry>          - The number of tries to acquire the IP number.
+    <timestamp>      - The time the IP number was acquired.
+    <IP Number>      - The IP number.
+
+
+Output file: $outputFileName
+
+ver. $progVer
+
+  "
+}   # function
+
+
+# ---------------------------------------- 
+  function GetReadingIntervalSeconds () {
+# ---------------------------------------- 
+# Get the value of the first argument, which is optional.
+    local __resultvar=$1		# Get the first func argument
+    local secs
+
+    if [ -z $arg1 ] ; then
+	    # $arg1 is empty. Use the default value.
+	    secs="$(( $readingMinutesDefault * 60 ))"
+	    eval $__resultvar="'$secs'"
+    else
+	    if [[ "$arg1" =~ ^[0-9]+$ ]] ; then
+	        # $arg1 is a number.
+	        secs=$(( $arg1 * 60 ))
+	        eval $__resultvar="'$secs'"
+	    else
+	        # $arg1 is not a number.
+	        printf "ERROR: The optional first argument must be a number.\n\n"
+            ProgUsage
+	        exit
+	    fi
+    fi
+}   # function
+
+
+# ---------------------------------------- 
+  function PrintBanner () {
+# ---------------------------------------- 
+# Globals used: $progName, $progVer
+
+    local minutes=$1
+    local ts=$(date "+%Y-%m-%d %H:%M:%S")
+
+    printf "
+Header: ============================================================
+Header: ====         Prog Name : $progName, ver. $progVer
+Header: ====        Start Time : $ts
+Header: ====  Polling Interval : $minutes minutes
+Header: ====         Log Level : $logLevel
+Header: ============================================================
+" >> $outputFile
+}
+
+
+# ---------------------------------------- 
+  function CheckForFile () {
+# ---------------------------------------- 
+# Get the current IP, compare to the last known IP. Report if there is a
+# change.
+    local file=$1
+
+    if [ -f $file ] ; then
+    	return $TRUE
+    else
+    	return $FALSE
+    fi
+
+}
+
+
+# ---------------------------------------- 
+# function MonitorIP () {
+# ---------------------------------------- 
+# Get the current IP, compare to the last known IP. Report if there is a
+# change.
+
+
+# ----------------------------------------------------------------------
+# Main MAIN main
+# ----------------------------------------------------------------------
+
+#set -xv 	#debug
+GetReadingIntervalSeconds sleepSeconds
+
+PrintBanner $(( sleepSeconds/60 ))
+
+CheckForFile ${curlPATH}
+if ! (( $? )) ; then
+    printf "
+ERROR: File not found: $curlPATH
+  $curlPATH is an essential file. It was not found in the
+  expected location.
+
+"
+    exit 1
+fi
+
+# MonitorIP
+
+
+while true
+do
+    ((readingCount++))
+    ipNo=""
+
+    inquiryCount=0
+    while [[ -z $ipNo ]] ; do
+
+        ((inquiryCount++))
+    	ipNo=$($curlPATH $curlARGS $curlURL 2> /dev/null )
+    	timeStamp=$(date "+%Y-%m-%d %H:%M:%S")
+
+	    # If an empty string is returned, sleep, then try again.
+    	if [ -z "$ipNo" ] ; then
+	        #printf "== No result. Try again: %d\n" "$inquiryCount"
+    	    sleep $retrySeconds
+    	fi
+    done
+
+    if [[ $readingCount == 1 ]] ; then
+	    lastKnownIP="$ipNo"
+    fi
+
+    if [ "$ipNo" != "$lastKnownIP" ] ; then
+
+        printf "Change::%s::%s::%s::%s::********\n" "$progVer" "$timeStamp" "$lastKnownIP" "$ipNo" >> $outputFile
+
+	    lastKnownIP="$ipNo"
+    fi
+
+    if [[ "$logLevel" > 1 ]] ; then
+        printf "Reading::%05d::%02d::%s::%s::%s\n" "$readingCount" "$inquiryCount" "$progVer" "$timeStamp" "$ipNo"  >> $outputFile
+    fi
+#
+    #printf "%05d %02d %20s -- %15s\n" "$readingCount" "$inquiryCount" "$timeStamp" "$ipNo"  >> $outputFile
+
+    # Wait an interval before the 
+    sleep $sleepSeconds
+
+done
+
+exit 0
+

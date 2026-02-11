@@ -1,0 +1,19 @@
+#! /bin/bash
+
+nameStr="$*"
+if [[ -z $nameStr ]]; then
+	nameStr="UNINITIALIZED"
+fi
+
+verStr="1.3"
+
+dayStr=$(date "+%a")
+dateStr=$(date "+%Y-%m-%d")
+timeStr=$(date "+%H:%M:%S")
+
+printf "ABSENT::$dayStr::$dateStr::$timeStr::$verStr::$nameStr::\n"
+
+# v1.3 - Changed default string from "default" to "UNINITIALIZED"
+#      - Added the timeStr to the record, consistent with the "late" script.
+# v1.2 - Initial version after HD crash.
+

@@ -1,0 +1,6 @@
+#! /bin/bash
+datestr="+%Y-%m-%d %H:%M:%S %Z %a"
+timestamp=$(/bin/date "$datestr")
+echo "# ----------------------------------------------------------------------"
+echo "Timestamp::$timestamp"
+echo ""

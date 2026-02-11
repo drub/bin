@@ -1,0 +1,402 @@
+#! /bin/bash
+
+# Uses environment variable $JOURNALPATH
+
+# ----------------------------------------
+#Globals Constants
+# ----------------------------------------
+readonly origIFS=$IFS
+readonly progVer="4.3"
+readonly progName=$(basename $0)
+readonly dashLineLength=60
+readonly uninitialized="UNINITIALIZED"
+readonly argList=$*
+
+# ----------------------------------------
+# File locations
+# ----------------------------------------
+# Read file names from the $JOURNALPATH env variable
+
+# ----------------------------------------
+# Globals
+# ----------------------------------------
+arg1=$1
+debug="TRUE"    #debug
+debug="FALSE"   #debug
+
+# ----------------------------------------
+# Libraries
+# ----------------------------------------
+libList="${HOME}/bin/lib/dashline"
+
+for i in $libList; do
+    if [[ -r $i ]]; then    # Does it exist?
+        . $i                # Source the library file.
+    else
+        printf "
+++ ERROR: Library file not found. Could not source library file." >&2
+        printf "File: $i" >&2
+        exit 9  # Error 9
+    fi
+done
+
+# ----------------------------------------
+  function ProgUsage () {
+# ----------------------------------------
+  printf "
+Name
+  $progName [ <file number> ] | -h
+
+  If no <file number> is provided, defaults to 0.
+
+Where
+  <file number> is one of
+
+"
+
+PrintEnvFileNames
+
+printf "\
+
+Notes
+
+- Journal file 1st line syntax: \"Description: <description>\"
+- Journal files paths are stored in an environment variable \$JOURNALPATH
+- The file paths cannot include a space. (for now)"
+  #PrintEnvFileNames
+
+}   # function
+
+# ----------------------------------------
+  function PrintEnvFileNames () {
+# ----------------------------------------
+# Print each file name in the env variable.
+# Show the index value of each file so user can select the index value.
+
+    loopCounter=0
+    for fname in ${fileList[@]}; do
+
+        # Before trying to read from file check that it exists
+        if [ -f $fname ]; then
+
+            # Read the first line. Contains file description.
+            IFS=":"
+            read -r firstPart fileDescription < "${fname}"
+            IFS="$origIFS"
+
+            # Print loopCounter followed by the description from the
+            # first line in the file.
+            printf "[%2.1d] %s\n" "${loopCounter}" "${fileDescription}"
+            printf "          %s\n" "${fname}"
+
+        else
+            # File does not exist.
+            printf "  %2.1d ...  %s\n" "${loopCounter}" "\
+ERROR: File listed in \$JOURNALPATH does not exist 
+         ${fname}"
+        fi
+
+        if [ "$debug" == "TRUE" ]; then
+            # Print a number followed by the file path
+            printf "++ [%2.1d] ... %s\n" "${loopCounter}" "${fname}"
+        fi
+
+        ((loopCounter++))
+    done    # for
+ 
+}   # function
+
+
+# ----------------------------------------
+  function PrintProgVer () {
+# ----------------------------------------
+    printf "\n%s\n" "
+ver. $progVer"
+}   # function
+
+# ----------------------------------------
+  function Initialize () {
+# ----------------------------------------
+    # Check to assure the search path environment variable is set.
+    # If not set, then exit
+    if [[  -z ${JOURNALPATH:-} ]]; then
+        printf "%s\n" "
+ERROR: Environment variable not set.
+       The CONTACTSPATH variable must contain a list of files.\n" >&2
+       exit 1
+   elif [ "$debug" == "TRUE" ]; then
+        printf "%s\n" "++ JOURNALPATH ...................... $JOURNALPATH"
+    fi
+
+    # Put the colon separated ENV var into an array
+    # Convert the JOURNALPATH string into the array fileList.
+    # Hex A = <newline>
+    fileList=($(echo "${JOURNALPATH}" | tr ':' '\n'))
+    #fileList=($(echo "${JOURNALPATH}" | awk '{gsub(/:/,"<<---->>\n")}1'))
+    #fileList="$(echo "${JOURNALPATH}" | awk '{gsub(/:/,"\xA")}1')"
+    #fileList=$(echo "${JOURNALPATH}" | awk '{gsub(/:/,"\xA")}1')
+
+    #echo "++ ${fileList[@]}" #debug
+    #echo "" #debug
+
+    #i=0 #debug
+    #for f in "${fileList[@]}"; do #debug
+    #    echo "  ++ ${f}"    #debug
+    #    ((i++)) #debug
+    #done    #debug
+    #exit    #debug
+
+    # Identify how many files are listed in the $JOURNALPATH
+    fileCount=${#fileList[@]}
+
+    # maxIndex is used for error messages. Index starts from zero, of course.
+    ((maxIndex=$fileCount-1))
+    
+    if [ "$debug" == "TRUE" ]; then
+        printf "%s\n" "++ File count ....................... $fileCount"
+        printf "%s\n" "++ maxIndex ......................... $maxIndex"
+    fi
+
+}   #function
+
+# ----------------------------------------
+# ----------------------------------------
+# main Main MAIN
+# ----------------------------------------
+# ----------------------------------------
+
+    echo " 
+    ----------------------------------------------------------------------
+      Depricated Depricated Depricated Depricated Depricated Depricated 
+    ----------------------------------------------------------------------
+
+    This is the shell version.
+    Has been re-implemented in Python as \"j\" "
+
+    PrintProgVer
+    echo ""
+
+exit 0
+
+
+if [ "$debug" == "TRUE" ]; then
+    DashLine $dashLineLength "-"
+    printf "%s\n" "
+++ arg1 ............................. $arg1
+++ arg list ......................... $argList\n"
+fi
+
+Initialize
+
+if [[ ${arg1} == "-h" ]]; then
+    ProgUsage
+    PrintProgVer
+    exit 0  # No error
+
+# Test if an empty string. Set to the default value of zero.
+elif [ -z "${arg1}" ]; then
+    # Set the default, <File number> = zero
+    arg1=0
+    if [ "$debug" == "TRUE" ]; then
+        printf "%s\n" "
+++ Argument is empty string ... Set arg1 to 0"
+    fi
+fi
+
+
+# Test if the index argument is numeric
+regex='^[0-9]+$'
+if  [[ "$arg1" =~ $regex ]] ; then
+
+    # arg1 is a number
+    if [ "$debug" == "TRUE" ]; then
+        printf "
+++ arg1 is a number
+++ arg1 ............................. $arg1"
+    fi
+
+    # Test that the index argument is in range
+    if [[ ${arg1} -ge 0 ]] && [[ ${arg1} -lt ${fileCount} ]]; then
+        # A valid file index was provided
+
+        targetFile=${fileList[$arg1]}
+
+        if [ "$debug" == "TRUE" ]; then
+            printf "%s\n" "
+++ targetFile ....................... $targetFile"
+        fi
+
+    else
+        printf "%s\n" "
+++ ERROR: <file number> out of range: $arg1
+          Value must be between 0 and ${maxIndex}\n" >&2
+
+        ProgUsage
+        exit 2      # Error = 2
+    fi
+fi
+
+#set -x  #debug
+
+# Check that the targetFile exists
+if [ ! -f "$targetFile" ]; then
+    printf "
+++ ERROR: Journal file does not exist.
+          <file number>: ${arg1}
+          File: $targetFile\n" >&2
+
+    exit 3      # Error = 3
+fi
+    
+if [[ ! -w $targetFile ]]; then
+    printf "%s\n" "
+++ ERROR: Cannot write to the journal file.
+          The file may not have write permission set.
+          File: $targetFile\n" >&2
+    exit 4      # Error = 4
+fi
+    
+
+if [ "$debug" == "TRUE" ]; then
+    printf "
+++ Target file ...................... $targetFile
+++ Here is where vi would start on the target file, but debug mode is set.\n"
+    exit
+
+else
+    vi "$targetFile"   #orig
+fi
+
+PrintProgVer
+
+# ----------------------------------------
+# ----------------------------------------
+  exit 0  # Without this, the comment section will execute and error out.
+# ----------------------------------------
+# ----------------------------------------
+
+----------------------
+-- ToDo todo TODO   --
+----------------------
+- Re-implement in python.
+- Figure out how to allow spaces in file names
+
+-------------
+-- History --
+-------------
+
+----------------------------------------------------------------------
+ 2022-12-17
+ journal, version 4.3
+----------------------------------------------------------------------
+- Update ProgUsage
+- Experiment: Try to allow spaces in file names. No luck, so far.
+- Format changes to PrintEnvFileNames
+
+----------------------------------------------------------------------
+ 2022-12-17
+ journal, version 4.2
+----------------------------------------------------------------------
+- Added a test before trying to read the first line <description>
+  Now an ERROR is displayed if the file does not exist.
+
+----------------------------------------------------------------------
+ 2022-12-17
+ journal, version 4.1
+----------------------------------------------------------------------
+- Trying out adding the file path, in addition to the description, in the
+  ProgUsage output. Experiment to see if that is helpful.
+- Minor adjustment in the ProgUsage output.
+
+----------------------------------------------------------------------
+ 2022-12-11
+ journal, version 4.0
+----------------------------------------------------------------------
+- Instead of diplaying file path, display a description of each journal file.
+  The journal file first line syntax "Description: <description>"
+  Then, display <fileNumber> : <description> in progUsage
+  That should be a more friendly message
+
+----------------------------------------------------------------------
+ 2022-12-10
+ journal, version 3.1
+----------------------------------------------------------------------
+Minor correction to ProgUsage.
+Display the progVer at the end.
+
+----------------------------------------------------------------------
+ 2022-12-09
+ journal, version 3.0
+----------------------------------------------------------------------
+Lots and lots of refactoring. Surprised it previously worked!!!
+
+Now the files listed in $JOURNALFILES are displayed in ProgUsage
+The user selects files based on index value.
+Syntax is new
+
+Name
+  journal [ <file number> ] | -h
+
+  If no <file number> is provided, defaults to 0.
+
+----------------------------------------------------------------------
+ 2022-12-02
+ journal, version 2.2
+----------------------------------------------------------------------
+Big rewrite, refactoring.
+Now reads files listed in the $JOURNALFILES env var.
+
+Syntax changed to 
+journal <number> | -h 
+where number selects the file.
+Got rid of the hardcoded file seclection.
+
+----------------------------------------------------------------------
+ 2021-09-20
+ journal, version 2.1
+----------------------------------------------------------------------
+Added a "pda" option.
+
+----------------------------------------------------------------------
+ 2021-02-14
+ journal, version 1.4
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
+ 2020-03-01
+ Version 1.4
+----------------------------------------------------------------------
+- Moved 4 files into ~/Sync/doc/journal structure.
+  Some were still in DropBox.
+
+----------------------------------------------------------------------
+ 2020-03-01
+ Version 1.3
+----------------------------------------------------------------------
+- Added "invest" to file list.
+- Purpose: Notes from investments events, etc.
+
+----------------------------------------------------------------------
+ 2019-10-23
+ Version 1.2
+----------------------------------------------------------------------
+Rename the "cprime" version to "work" in this code
+Move the work file to Sync/journal/work/work_journal_file.txt
+
+----------------------------------------------------------------------
+ 2018-06-21
+ Version 1.1
+----------------------------------------------------------------------
+- Added the "job" file to the syntax.
+
+----------------------------------------------------------------------
+ 2018-06-21
+ Version 1.0
+----------------------------------------------------------------------
+- Works for parameters
+  - <empty>, which opens the cPrime file
+  - cprime, which opens the cPrime file, in my cPrime DropBox
+  - personal, the personal file, in my private DropBox
+  - agile, which opens a file in my local FS
+
+

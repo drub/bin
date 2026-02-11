@@ -1,0 +1,63 @@
+#! /bin/bash
+
+entryVerStr="1.3"
+
+dayStr=$(date "+%a")
+dateStr=$(date "+%Y-%m-%d")
+timeStr=$(date "+%H:%M:%S")
+
+cat << EOF
+
+---------------- Begin Prospect $entryVerStr
+Title or Ref #:: 
+-----------------------------------
+Employer or Bus name:: 
+Type:: Application, Interview, Inquiry
+How:: Website, Email, Phone, Mail, In person, Fax
+Website or email:: 
+Date of contact:: $dateStr
+Date entered:: notentered
+Address:: 
+City:: 
+State:: 
+Zip:: 
+Phone:: 
+Note:: 
+--------------- End Prospect $entryVerStr
+
+EOF
+
+# ----------------------------------------------------------------------
+# History history HISTORY
+# ----------------------------------------------------------------------
+#
+# --------------------------------------------------
+# Ver 1.3
+# --------------------------------------------------
+# - Changed field order. Make it more consistent with the field order on the
+#   Unemployment site. Easier data entry each week.
+# - Changed the "Date entered:: " record. Replaced "2023- " with "notentered"
+#
+# --------------------------------------------------
+# Ver 1.2
+# --------------------------------------------------
+# Updated the "How:: " record with the current website menu
+# Updated the "Type:: " record with the current website menu
+#
+# --------------------------------------------------
+# Ver 1.1
+# --------------------------------------------------
+# Added "2023-" to the "Date entered::" field.
+# Makes completing the record easier.
+#
+# --------------------------------------------------
+# Ver 1.1
+# --------------------------------------------------
+# Added empty lines for nicer visuals
+#
+# --------------------------------------------------
+# Ver 1.0
+# --------------------------------------------------
+# This script supports the data requirements when filing for WA state
+# unemployment benefits.
+#

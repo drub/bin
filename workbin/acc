@@ -1,0 +1,18 @@
+#! /bin/bash
+
+accStr="$*"
+if [[ -z $accStr ]]; then
+	accStr="ACCOMPLISHMENT"
+fi
+
+verStr="1.0"
+
+dayStr=$(date "+%a")
+dateStr=$(date "+%Y-%m-%d")
+timeStr=$(date "+%H:%M:%S")
+
+printf "ACC::$verStr::$dayStr::$dateStr::$accStr::\n"
+
+# v1.0 - Initial version
+# ACC::1.0::Mon::2017-04-24::DESCRIPTION::
+# ACC::1.0::Mon::2017-04-24::frog and stuff::

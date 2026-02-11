@@ -1,0 +1,20 @@
+#! /bin/bash
+
+
+event=$*
+if [[ -z $event ]]; then
+	event="StoryTime"
+fi
+
+progVer="1.2"
+
+dateStr=$(date "+%Y-%m-xx")
+
+# desc: Describe the agenda item.
+
+printf "Agenda::$event::desc::$progVer::I::$dateStr::"
+printf "\n"
+
+# 1.2: There were 2 "I" fields. Removed the last one.
+# 1.1: Add the "I" field to the end. Meaning = "Incomplete"
+# 1.0: Initial version

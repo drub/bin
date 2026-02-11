@@ -1,0 +1,19 @@
+#! /bin/bash
+
+echo "first try ..."
+
+countChr=40
+substituteChr="+"
+# Put a countChr spaces into a string variable.
+printf -v lineStr '%*s' "$countChr"
+# Print the variable after the spaces are replaced with a dash.
+printf "%s\n" ${lineStr// /-}
+printf "%s\n" ${lineStr// /${substituteChr}}
+
+echo "second try ..."
+
+length=40
+eval printf -v line '%.0s-' {1..$length}
+
+#printf "%s\n"
+

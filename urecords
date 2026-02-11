@@ -1,0 +1,375 @@
+#!/Users/thedrub/anaconda3/bin/python
+
+# ----------------------------------------------------------------------
+# Libraries
+# ----------------------------------------------------------------------
+#import pandas as pd
+import sys
+#import csv
+import os
+from optparse import OptionParser
+from pathlib import Path
+
+# ----------------------------------------------------------------------
+# My Libraries
+# ----------------------------------------------------------------------
+lib_path = os.environ['HOME'] + "/bin/lib"
+sys.path.append(lib_path)
+from format_str import StrCol
+
+# ----------------------------------------------------------------------
+# Files
+# ----------------------------------------------------------------------
+HOME = os.environ['HOME'] # Use the $HOME env variable
+
+# ----------------------------------------------------------------------
+# Constants
+# ----------------------------------------------------------------------
+prog_config = \
+    {"name"          : os.path.basename(sys.argv[0]), \
+     "maj_ver"        : "1", \
+     "min_ver"        : "5", \
+     "ifname"         : HOME + "/sync_synology/home/job-search/job.txt" \
+    }
+
+prog_config["ver"] = prog_config["maj_ver"] + "." + prog_config["min_ver"]
+
+# ----------------------------------------------------------------------
+# Initializations
+# ----------------------------------------------------------------------
+line_count = 0
+entry_count = 0
+entries_displayed_count = 0
+
+debug = True    #debug
+debug = False   #debug
+
+# ----------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------
+
+# --------------------------------------------------
+def Display_file_info(fname):
+# --------------------------------------------------
+# A debug function to display files used.
+
+    print (fname)
+
+
+# --------------------------------------------------
+def Display_tokens(token_list):
+# --------------------------------------------------
+# A debug function to display the elements in a list.
+
+    i = 0
+    for token in token_list:
+        print ("[{0:2}] ... {1}".format(i, token))
+        i += 1
+
+
+# --------------------------------------------------
+def Closing_message(entry_count):
+# --------------------------------------------------
+    base_str = "." * 24 + " "
+    data_col = 25
+
+    if entry_count == 0:
+        print ("-"*70)  # Leading dashed line
+        print("")
+        tmp_str = StrCol(base_str, "No records found.", 0)
+        print(tmp_str)
+    else:
+        print ("-"*70)  # Leading dashed line
+        print("")
+        tmp_str = StrCol(base_str, "Records displayed ", 0)
+        print(tmp_str, end = '')    # Supress newline)
+        print(entry_count)
+
+
+# --------------------------------------------------
+def Get_notes_fields (fd, lncnt) :
+# --------------------------------------------------
+    debug = False
+
+    while True :
+        for line in fd :
+            lncnt += 1
+            line = line.rstrip('\r\n') # Strip the trailing EOL
+
+            #debug = True
+            if debug :
+                print ('++++ linecnt ................. ', lncnt) #debug
+                print ('++++ line .................... ', line) #debug
+
+            tokens = line.split(" ")
+            if debug :
+                print ('++++ tokens[0] ............... |', tokens[0], "|") #debug
+                Display_tokens(tokens)  #debug
+
+            # Protect the following  tests from error
+            if (len(tokens) > 1) :
+
+                if ( (tokens[1] == "End") and (tokens[2] == "Prospect") ) :
+                    if debug :
+                        print ('++++ End of entry found ...... ', lncnt) #debug 
+                    return(lncnt)
+
+                else :
+                    # Print the line from the entry.
+                    print ("{:<5} {:<70}".format(lncnt, line))
+
+
+# --------------------------------------------------
+def Print_prospect_record (file, file_line_cnt, entry_cnt) :
+# --------------------------------------------------
+    # Inside a prospect record.
+    linecnt = 0     # Count lines inside the prospect entry found
+
+    #print ("-"*20, "Entry ", entry_cnt, "-"*38)
+    print ("-"*20, "Entry{0:>5}".format(entry_cnt), "-"*37 )
+    #print ('+++++ Begin +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ', file_line_cnt)   #debug
+
+    for line in file :
+        line = line.rstrip('\r\n') # Strip the trailing EOL
+        linecnt += 1
+        file_line_cnt += 1
+
+        # First, test to see if we have a record end line.
+        tokens = line.split(" ")
+        #print ('++++ len(tokens) ............. ', len(tokens)) #debug
+        #print ('++++ tokens .................. ', tokens) #debug
+
+        if (len(tokens) == 4) :
+            # It is could be end line. Validate. If end of record, return().
+            #Display_tokens(tokens)  #debug
+
+            if (tokens[0] == "----------------") :
+                if (tokens[1] == "End") and (tokens[2] == "Prospect") :
+                    #print ('+++++ End +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ', file_line_cnt)   #debug
+                    return(file_line_cnt)
+
+        # Next, when not the end, display the record.
+        tokens = line.split("::")
+        #Display_tokens(tokens) #debug
+
+        if (len(tokens) > 1) :
+            # It is a record line
+            description = tokens[0]
+            value       = tokens[1]
+
+            #print ('++++ ', description, ' ..... ', value) #debug
+            print ("{:<5} {:>20} {:<55}".format(file_line_cnt, description, value))
+
+            # If this line is a "Note:: " record, display all following lines
+            # until the # "End Prospect" record is found.
+            # The "Note :: " line is the last structured line in the record.
+            #
+            if (tokens[0] == "Note") :
+                #debug = True
+                if debug :
+                    print ('++ Get the notes ........... ', file_line_cnt) #debug
+
+                file_line_cnt = Get_notes_fields(file, file_line_cnt)
+
+                if debug :
+                    print ('++ Done getting notes ...... ', file_line_cnt) #debug
+                return(file_line_cnt)
+
+
+# ----------------------------------------------------------------------
+# Main MAIN main
+# ----------------------------------------------------------------------
+
+print ("")
+print (prog_config["name"]  + " " + prog_config["ver"]) # Banner line.
+
+if debug :
+    print ('++ Number of arguments ....... ', len(sys.argv))
+    print ('++ Argument List:', str(sys.argv))
+    Display_file_info(prog_config['ifname'])
+
+# Initialize the options parser
+parser = OptionParser()
+parser.add_option("-a", action="store_true", dest="all", \
+                 help = "Display all records, regarless of state")
+parser.add_option("-c", type="int", dest="desired_entry_count", \
+                 help = "Display this number of entries from the input file")
+
+# Collection the options passed.
+(opts, args) = parser.parse_args()
+
+if debug :
+    print("++ options ...") #debug
+    print(opts) #debug
+
+if opts.all :
+    print("++ Option: Display all records. Not filtered \"State\" field.")
+
+if opts.desired_entry_count == None :
+        opts.desired_entry_count = 100
+else  :
+    print("++ Option: Display " + str(opts.desired_entry_count) + " records.")
+
+with open(str(prog_config['ifname']), 'r') as in_fd:
+    for line in in_fd:
+        line = line.rstrip('\r\n') # Strip the trailing EOL
+        line_count += 1
+
+        #debug = True    #debug
+        if debug :  #debug
+            print ('++ Line no ................... ', line_count) #debug
+            print ('++ Line ...................... ', line) #debug
+
+        tokens = line.split(" ")
+
+        if debug :  #debug
+            print ('++ tokens .................... ', tokens) #debug
+        #debug = False    #debug
+
+        if (len(tokens) > 1) :
+            # It is possible that that line begins a record
+
+            if (tokens[1] == "Begin") and (tokens[2] == "Prospect") :
+                # A record has been found.
+                entry_count += 1
+
+                if debug :
+                    print ('-------------------- Entry found -----------------------------------', line_count) #debug
+                    print ('++ desired_entry_count ....... ', opts.desired_entry_count) #debug
+                    print ('++ entry_count ............... ', entry_count) #debug
+                    print ('++ Line count ................ ', line_count) #debug
+                    print ('++ tokens .................... ', tokens) #debug
+
+                if (entry_count > 0) and (entry_count <= (opts.desired_entry_count)) :
+                    # Time to print a prospect record
+
+                    #print ('-------------------- Call Print_prospect_record --------------------', line_count) #debug
+                    line_count = Print_prospect_record(in_fd, line_count,
+                                                       entry_count)
+                    entries_displayed_count += 1
+                    #print ('-------------------- Return Print_prospect_record ------------------', line_count) #debug
+                    #print ('++ Line count ................ ', line_count) #debug
+
+#print ('++ Record count .............. ', entry_count) #debug
+Closing_message(entries_displayed_count)
+
+exit()
+
+# ----------------------------------------------------------------------
+# End END end
+# ----------------------------------------------------------------------
+
+
+'''
+Find, parse unemployment records
+
+# ----------------------------------------------------------------------
+# TODO ToDo todo
+# ----------------------------------------------------------------------
+
+- Check for a valid entry version. Currently only knows about entry ver 1.0
+  If the entry format changes, would need to alter execution based on entry
+  format changes.
+
+# ----------------------------------------------------------------------
+# History HISTORY
+# ----------------------------------------------------------------------
+
+# --------------------------------------------------
+# Ver: 1.5
+# --------------------------------------------------
+- There was an error in finding the last line of the entry.
+  Checked that there is enough tokens for the following syntax test.
+- This entry corrects poor git() hygene. Added the wrong entry comment for 1.4
+
+# --------------------------------------------------
+# Ver: 1.4
+# --------------------------------------------------
+- Modification. Modify the "Begin" record line search.
+  This is kinda weird ... just like removing the search for the dashed part of
+  the record "End" record, the match does not work properly for the very first
+  record in the file. Remove the check on token 0, the dashed part.
+  Test only for "Begin" and "Prospect"
+
+  Turns out it was a logic error, not a problem matching the dash line.
+  Sheesh
+  Wonder if it would be better to keep the dash line test. Another day ....
+
+# --------------------------------------------------
+# Ver: 1.3
+# --------------------------------------------------
+- Enhancement. Added the entry count in the leading dash line.
+- Supports entry version 1.1 and earlier.
+
+# --------------------------------------------------
+# Ver: 1.2
+# --------------------------------------------------
+- Fix 
+  Problems with matching the dashed part of the last line of an entry. Stop
+  checking for the dashed part of the final entry line. Sheesh!
+- Supports entry version 1.1 and earlier.
+
+# --------------------------------------------------
+# Ver: 1.1
+# --------------------------------------------------
+- Fix displaying the Notes lines
+  Added line numbers, like the rest of the output.
+
+# --------------------------------------------------
+# Ver: 1.0
+# --------------------------------------------------
+- Displays N records, depending on the "-cN" runtime option
+
+# --------------------------------------------------
+# Ver: 0.2
+# --------------------------------------------------
+- Displays an arbitrary number of notes lines following the "Note:: " record.
+
+# --------------------------------------------------
+# Ver: 0.1
+# --------------------------------------------------
+Functional. Displays required info for employment contacts for
+the WA state unemployment folks.
+- Displays all records.
+- Does not yet implement the -c option, though displayed in -h
+
+# --------------------------------------------------
+# Input file Entry formats
+# --------------------------------------------------
+
+Added the "Zip:: " record
+
+---------------- Begin Prospect 1.1
+Title or Ref #::
+-----------------------------------
+Employer or Bus name:: 
+How:: In person, Online, Phone, Email, Mail
+Type:: Application, resume, Interview, Inquiry
+Address:: 
+City:: 
+State:: 
+Zip:: 
+Website or email:: 
+Phone:: 
+Date of contact:: 
+Date entered:: tbd
+Note:: 
+--------------- End Prospect 1.1
+
+
+---------------- Begin Prospect 1.0
+Title or Ref #::
+-----------------------------------
+Employer or Bus name::
+How:: In person, Online, Phone, Email, Mail
+Type:: Application, resume, Interview, Inquiry
+Address::
+City::
+State::
+Website or email::
+Phone::
+Date of contact::
+Date entered:: tbd
+Note::
+--------------- End Prospect 1.0
+'''

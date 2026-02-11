@@ -1,0 +1,90 @@
+#! /opt/local/bin/python
+
+import sys, string
+dashLineLength = 70
+
+def dashline(lnLen):
+    print '-' * lnLen
+
+
+# ------------------------------
+def introduction () :
+# ------------------------------
+    ''' Print the opening message for this exercise.
+  
+    Returns nothing.'''
+
+    dashline(dashLineLength)
+    print ''' \
+Objectives
+
+- Read from a "team" file
+- Output a nicely formatted display \
+'''
+    dashline(dashLineLength)
+
+
+# ------------------------------
+def openFile(fname):
+# ------------------------------
+    #print '-- File to open: %s ' % fname  #debug
+    try:
+        FH = open(fname)
+        #print '-- File opened: %s' % fname  #debug
+    except IOError:
+        print "ERROR: Input file not found."
+        return False
+    else:
+        return FH
+
+
+# ------------------------------
+def ProcessFile(inFile):
+# ------------------------------
+    #print '-- ProcessFile: Input file: %s' % inFile    #debug
+    lineNo = 0
+    for line in inFile.readlines():
+        lineNo += 1
+        line = line.rstrip()
+        #print "--- %s" % line
+
+        parts = line.split("::")   # Parse the line on "::"
+        #f, l, co, role, email, skype, phone, mobile = line.split("::")   # Parse the line on "::"
+
+        if parts[0] == "C" :
+            fname = parts[1].strip()
+            lname = parts[2].strip()
+            email = parts[5].strip()
+            phone = parts[7].strip()
+            print "[{0:2}] {1:10} {2:15} {3:15} {4:28}".format(lineNo, fname,
+                    lname, phone, email)
+
+
+# ------------------------------
+def main():
+# ------------------------------
+    introduction()
+
+    inputFile = openFile('team')
+    if inputFile :
+        "A FH was returned."    #debug
+    else:
+        "Error while opening file. FH was not returned."    #debug
+
+
+    #if inputFile == openFile('team')
+    #    ProcessFile(inputFile)
+    #else
+    #    exit
+
+    ProcessFile(inputFile)
+
+    inputFile.close
+
+
+
+
+if __name__ == "__main__":
+    main()
+
+

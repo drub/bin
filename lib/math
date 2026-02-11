@@ -1,0 +1,21 @@
+#! /bin/bash
+
+conter=0
+for ((i=1;i<=5;i++)); do
+    printf "%s\n" "i ............ $i"
+
+    ((counter++))
+    printf "%s\n" "counter ...... $counter"
+done
+
+# --------------------
+exit
+# --------------------
+
+Math uses this format
+- var = $(( a = b + c - d )) 
+- There seems to be no spaces requirements. Just used for appearance.
+
+((var++))
+- Note: No variable assignment.  Not var=$((var++))
+

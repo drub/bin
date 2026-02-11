@@ -1,0 +1,11 @@
+#! /bin/bash
+
+noteStr=$*
+if [[ -z $noteStr ]]; then
+	noteStr="UNINITIALIZED"
+fi
+
+printf "::"
+printf "$noteStr"
+printf "::\n"
+

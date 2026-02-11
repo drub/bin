@@ -1,0 +1,49 @@
+#! /bin/bash
+
+# Search for "Action::" at the beginning of line.
+# Allows for adding "No " in front of "Action::" with no match.
+#
+#
+echo
+echo
+echo "++++ Work: journal_lighthouse_vision.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_lighthouse_vision.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Work: job-search.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/home/job-search/job.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Personal: journal_rotary.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_rotary.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Work: journal_work.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/work/journal_work.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Coaching: journal_coaching.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_coaching.txt | grep -iv Done:
+
+echo
+echo
+echo "++++ Personal: journal_personal.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_personal.txt | grep -iv Done:
+
+echo "++++ Investments: journal_investments.txt ++++++++++++++++++++++++"
+grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_investments.txt | grep -iv Done:
+
+#echo
+#echo
+#echo "++++ PDA: journal_pda.txt ++++++++++++++++++++++++"
+#grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_pda.txt | grep -iv Done:
+
+#echo
+#echo
+#echo "++++ COD: journal_cod.txt ++++++++++++++++++++++++"
+#grep -in '^Action::' /Users/thedrub/sync_synology/doc/journal/journal_cod.txt | grep -iv Done:
+

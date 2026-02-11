@@ -1,0 +1,72 @@
+#! /bin/bash
+
+#set -xv	#debug
+
+origIFS=$IFS
+verStr="1.0"
+uninitialized="UNINITIALIZED"
+allRecords="FALSE"
+
+#echo "0 ........................ .$0."   #debug
+#echo "1 ........................ .$1."   #debug
+#echo "$* ....................... .$*."    #debug
+
+if [[ -z $1 ]]; then
+	echo
+	echo "ERROR: Name for search not supplied."
+	echo "ERROR: File name for search not supplied."
+	echo
+	exit
+else
+	searchStr=$1 
+fi
+
+debug="FALSE"
+debug="TRUE"
+
+# Parse CONREC version 3.0 record format
+IFS=":"
+grep "CONREC::" | grep -i $searchStr | \
+while read recordID junk dateStr junk recordVer junk firstStr junk lastStr junk emailStr junk phoneStr junk orgStr junk remaining
+  do
+    if [ "$debug" == "TRUE" ]; then
+      echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+      echo "++ recordID ........... $recordID"
+      echo "++ Date ............... $dateStr"
+      echo "++ recordVer .......... $recordVer"
+      echo "++ firstStr ........... $firstStr"
+      echo "++ lastStr ............ $lastStr"
+      echo "++ emailStr ........... $emailStr"
+      echo "++ phoneStr ........... $phoneStr"
+      echo "++ orgStr ............. $orgStr"
+      echo "++ remainingStr ....... $remainingStr"
+      #printf "++ %-.20s %s\n" "orgStr .................................." "$orgStr"
+    fi
+
+    printf " -------------------------------------------------- $verStr -----\n"
+    echo "   Name ........ $firstStr $lastStr"
+    echo "   Phone ....... $phoneStr"
+    echo "   email ....... $emailStr"
+    echo "     Org ......... $orgStr"
+    echo "     Created ..... $dateStr                $recordID $recordVer"
+
+  done
+
+printf " ------------------------------------------------------------"
+printf "\n"
+
+exit	# Without this, the comment section will execute and error out.
+ 
+# ----------------------------------------------------------------------
+# 2018-04-17
+# Version 1.0
+# ----------------------------------------------------------------------
+# Output looks like this
+ -------------------------------------------------- 1.0 -----
+   Name ........ Dane Jessen
+   Phone ....... 509.230.2877
+   email ....... dane@rainincubator.org
+     Org ......... RAIN Incubator
+     Created ..... 2018-04-17                CONREC 3.0
+ ------------------------------------------------------------
+

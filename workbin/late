@@ -1,0 +1,20 @@
+#! /bin/bash
+
+nameStr="$*"
+if [[ -z $nameStr ]]; then
+	nameStr="UNITIALIZED"
+fi
+
+verStr="1.1"
+
+dayStr=$(date "+%a")
+dateStr=$(date "+%Y-%m-%d")
+timeStr=$(date "+%H:%M:%S")
+
+printf "LATE::$dayStr::$dateStr::$timeStr::$verStr::$nameStr::\n"
+
+# v1.1 - Default nameStr changed from "David B" to "UNINITIALIZED".
+# v1.0 - Initial version
+
+#LATE::Fri::2012-11-30::15:34:05::1.0::Weilan::
+#LATE::Wed::2013-01-09::20:30:42::1.1::dmitri::

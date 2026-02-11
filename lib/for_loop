@@ -1,0 +1,20 @@
+#!/bin/bash
+
+printf "%s\n" "For hard coded range values"
+for i in {1..5}
+do
+   echo "Welcome $i times"
+done
+
+
+printf "%s\n"
+printf "%s\n"
+
+printf "%s\n" "Brace expansion occurs before variable expansion."
+printf "%s\n" "A different syntax must be used!!!"
+printf "%s\n" "For variable range values"
+
+upperBound=5
+for ((i=1;i<=upperBound;i++)); do
+   echo "Welcome $i times"
+done

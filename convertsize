@@ -1,0 +1,43 @@
+#! /bin/bash
+
+outputDir="12x10"
+
+printf "%s Create the output directory: $outputDir\n" "-- Info:"
+mkdir $outputDir 2> /dev/null
+
+printf "%s Resize files with a \".jpg\" extension.\n" "-- Info:"
+#pwdOut=$(pwd)
+#echo "pwd .............................. $pwdOut"	#debug
+
+loopCount=0
+for fileName in JPG/*.jpg
+do
+
+	((loopCount++))
+
+	# 
+	fName=${fileName%.*}
+	#echo "fName ............................ $fName"	#debug
+
+	# Remove the directory name and leave just the file name.
+	fName=$(basename $fileName)
+	#echo "fName ............................ $fName"	#debug
+
+	# Remove the file extension, the ".jpg"
+	#set oldFS=$IFS
+	#IFS="."
+	#set $fname
+	#fname=$1
+	fName=${fName%.*}
+	#echo "parseFname ....................... $parseFname"	#debug
+	#fName=${parseFname}
+	#echo "fName ............................ $fName"	#debug
+
+	outputFname="${outputDir}/${fName}_12x10.jpg"
+	#echo "outputFname ...................... $outputFname"	#debug
+	printf "++ [%3.d] %s --> %s\n" "$loopCount" "$fileName" "$outputFname"
+	$(convert $fileName -resize 1280x1024 $outputFname)
+	#exit	#debug
+
+done
+

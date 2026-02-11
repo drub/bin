@@ -1,0 +1,27 @@
+#!/bin/bash
+
+args=$*
+all_option="FALSE"
+
+optspec="a"
+
+while getopts "$optspec" optchar; do
+    case "${optchar}" in
+        a) echo " Success. Got the \"$optchar\" option"
+            all_option="TRUE"
+            ;;
+        *) echo "Silly stuff. That is not a recognize option."
+            ;;
+    esac
+done
+
+printf "%s\n" "++ args ............................ $args"
+printf "%s\n" "++ all_option ...................... $all_option"
+
+#set -xv
+if [[ "$all_option" == "TRUE" ]]; then
+    printf "%s\n"  "True: Action based on the \"a\" option."
+else
+    printf "%s\n"  "False: Action based on the \"a\" option."
+fi
+

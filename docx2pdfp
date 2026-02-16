@@ -1,48 +1,76 @@
 #!/usr/bin/env python3
 
-import os
+# docx2pdfp.py - Batch convert .docx files to PDF using LibreOffice
+# Converts all .docx files in the current working directory
+# and writes the resulting PDFs to the specified output directory.
+# Author: David Bacon
+# Created: 2026-02-15
+
 import sys
+
+# Require Python 3.6+ (f-strings, os.fspath, etc.)
+if sys.version_info < (3, 6):
+    print("Error: Python 3.6 or later is required.")
+    print("       A supported python version is not available..")
+    sys.exit(1)
+
+import os
 import shutil
 import subprocess
 import glob
 
-VERSION = "1.0"
+# Program version
+PROG_VERSION = "2.0"
+
+# Locate LibreOffice binary: check PATH first, fall back to default macOS location
 SOFFICE = shutil.which("soffice") or "/Applications/LibreOffice.app/Contents/MacOS/soffice"
 
+# Verify LibreOffice is installed and executable
 if not os.path.isfile(SOFFICE) or not os.access(SOFFICE, os.X_OK):
+    print(f"docx2pdfp v{PROG_VERSION}")
     print("Error: LibreOffice not found.")
     sys.exit(1)
 
-print(f"docx2pdfp v{VERSION}")
+# Display version banner
+print(f"docx2pdfp v{PROG_VERSION}")
 print()
 
-if len(sys.argv) < 2 or sys.argv[1] == "-h":
-    print(f"Usage: {sys.argv[0]} <output-directory>")
+# Show help if no arguments provided or help flag is passed
+if len(sys.argv) < 2 or sys.argv[1] in ("-h", "-help", "--help"):
+    print(f"Usage: {sys.argv[0]} [-h | --help] <output-directory>")
     print()
     print("Creates ............. <output-directory>")
     print("Converts .docx files in the current directory to PDF.")
     print("Conversion tool ..... LibreOffice")
+    print()
+    print("Options:")
+    print("  -h, --help          Show this help message")
     sys.exit(0)
 
+# Output directory from first argument; must not already exist
 output_dir = sys.argv[1]
 
 if os.path.exists(output_dir):
     print(f"Error: '{output_dir}' already exists.")
     sys.exit(1)
 
-print("Conversion tool ..... LibreOffice")
-print(f"Output directory .... {output_dir}")
-print()
-os.makedirs(output_dir)
-
+# Check for .docx files before creating output directory
 docx_files = sorted(glob.glob("*.docx"))
 
 if not docx_files:
     print("No .docx files found in the current directory.")
     sys.exit(1)
 
+# Display conversion settings and create output directory
+print("Conversion tool ..... LibreOffice")
+print(f"Output directory .... {output_dir}")
+print()
+os.makedirs(output_dir)
+
+# Track number of successful conversions
 count = 0
 
+# Convert each .docx file to PDF using LibreOffice headless mode
 for file in docx_files:
     basename = os.path.basename(file)
     pdf_name = os.path.splitext(basename)[0] + ".pdf"
@@ -59,5 +87,6 @@ for file in docx_files:
     else:
         count += 1
 
+# Summary
 print()
 print(f"Done. {count} file(s) converted to PDF.")

@@ -23,7 +23,7 @@ debug = False
 PROG_CONFIG = \
     {"name"          : os.path.basename(sys.argv[0]), \
      "maj_ver"        : "2", \
-     "min_ver"        : "1", \
+     "min_ver"        : "2", \
     }
 PROG_CONFIG["ver"] = PROG_CONFIG["maj_ver"] + "." + PROG_CONFIG["min_ver"]
 
@@ -73,6 +73,10 @@ def Process_File (line_ptr, days, verboseHeaders) :
             # While in the current day, print each Topic:: record
 
             line_ptr += 1   # Move to the next line.
+
+            if line_ptr >= len(content) :   # End of file reached
+                return day_counter
+
             # Strip trailing EOL from current line.
             content[line_ptr] = content[line_ptr].rstrip('\r\n')
 
@@ -116,7 +120,7 @@ def Process_File (line_ptr, days, verboseHeaders) :
 
         # End for i in range
 
-    return()    # End def
+    return day_counter - 1    # End def
 
 # --------------------------------------------------
 def PrintExitMesg () :
@@ -135,7 +139,7 @@ def PrintExitMesg () :
 if __name__ == '__main__' :
 
     # Initialize the options parser
-    parser = OptionParser()
+    parser = OptionParser(description=f"{PROG_CONFIG['name']} v{PROG_CONFIG['ver']} - Parse and display work journal entries by day")
     parser.add_option("-c", type="int", dest="day_count", \
                   help = "Display records for this many days")
 
@@ -150,6 +154,10 @@ if __name__ == '__main__' :
 
     # Collect any supplied options.
     (options, args) = parser.parse_args()
+
+    # Startup message to stderr, only when stdout is a terminal (not piped/redirected)
+    if sys.stdout.isatty() :
+        print(f"{PROG_CONFIG['name']} v{PROG_CONFIG['ver']}", file=sys.stderr)
 
     debug = options.debug
 
@@ -180,7 +188,10 @@ if __name__ == '__main__' :
     if debug :
         print("++ options ............." + str(options))
 
-    Process_File(linePtr, options.day_count, options.fullHeaders)
+    days_displayed = Process_File(linePtr, options.day_count, options.fullHeaders)
+
+    if sys.stdout.isatty() :
+        print(f"{PROG_CONFIG['name']} v{PROG_CONFIG['ver']} ... {days_displayed} days displayed", file=sys.stderr)
 
     #PrintExitMesg() # Don't want extra output. Shows up in files.
 
@@ -203,6 +214,30 @@ ToDo: It is assumed to grab the following 3 lines after the first Topic::
 # ----------------------------------------------------------------------
 # History
 # ----------------------------------------------------------------------
+# --------------------------------------------------
+# topics, Ver: 2.2
+# 2026-02-22
+# --------------------------------------------------
+- Add startup message to stderr (name + version)
+    Stderr prevents startup message from polluting redirected output
+    Use sys.stdout.isatty() to suppress message when stdout is piped
+- Add end of processing message to stderr (name + version + days displayed)
+    Process_File now returns days_displayed count
+- Add version indicator to -h output description line
+- Add EOF bounds check in Process_File inner while loop
+    Prevents IndexError when -c N exceeds available days in file
+- Move startup message to after parse_args() to suppress it during -h
+
+Usage: topics [options]
+
+topics v2.2 - Parse and display work journal entries by day
+
+Options:
+  -h, --help    show this help message and exit
+  -c DAY_COUNT  Display records for this many days
+  -d            Set debug mode
+  -f            Display full headers
+
 # --------------------------------------------------
 # topics, Ver: 2.1
 # 2022-12-27

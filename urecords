@@ -28,7 +28,7 @@ HOME = os.environ['HOME'] # Use the $HOME env variable
 prog_config = \
     {"name"          : os.path.basename(sys.argv[0]), \
      "maj_ver"        : "1", \
-     "min_ver"        : "5", \
+     "min_ver"        : "6", \
      "ifname"         : HOME + "/sync_synology/home/job-search/job.txt" \
     }
 
@@ -180,16 +180,13 @@ def Print_prospect_record (file, file_line_cnt, entry_cnt) :
 # Main MAIN main
 # ----------------------------------------------------------------------
 
-print ("")
-print (prog_config["name"]  + " " + prog_config["ver"]) # Banner line.
-
 if debug :
     print ('++ Number of arguments ....... ', len(sys.argv))
     print ('++ Argument List:', str(sys.argv))
     Display_file_info(prog_config['ifname'])
 
 # Initialize the options parser
-parser = OptionParser()
+parser = OptionParser(description=f"{prog_config['name']} v{prog_config['ver']} - Find and display unemployment prospect records")
 parser.add_option("-a", action="store_true", dest="all", \
                  help = "Display all records, regarless of state")
 parser.add_option("-c", type="int", dest="desired_entry_count", \
@@ -197,6 +194,10 @@ parser.add_option("-c", type="int", dest="desired_entry_count", \
 
 # Collection the options passed.
 (opts, args) = parser.parse_args()
+
+# Startup message to stderr, only when stdout is a terminal (not piped/redirected)
+if sys.stdout.isatty() :
+    print(f"{prog_config['name']} v{prog_config['ver']}", file=sys.stderr)
 
 if debug :
     print("++ options ...") #debug
@@ -207,8 +208,10 @@ if opts.all :
 
 if opts.desired_entry_count == None :
         opts.desired_entry_count = 100
-else  :
-    print("++ Option: Display " + str(opts.desired_entry_count) + " records.")
+
+if not Path(prog_config['ifname']).exists() :
+    print(f"ERROR: Input file not found: {prog_config['ifname']}", file=sys.stderr)
+    exit(1)
 
 with open(str(prog_config['ifname']), 'r') as in_fd:
     for line in in_fd:
@@ -253,6 +256,9 @@ with open(str(prog_config['ifname']), 'r') as in_fd:
 #print ('++ Record count .............. ', entry_count) #debug
 Closing_message(entries_displayed_count)
 
+if sys.stdout.isatty() :
+    print(f"{prog_config['name']} v{prog_config['ver']} ... {entries_displayed_count} records displayed", file=sys.stderr)
+
 exit()
 
 # ----------------------------------------------------------------------
@@ -274,6 +280,28 @@ Find, parse unemployment records
 # ----------------------------------------------------------------------
 # History HISTORY
 # ----------------------------------------------------------------------
+
+# --------------------------------------------------
+# Ver: 1.6
+# 2026-02-22
+# --------------------------------------------------
+- Add startup message to stderr (name + version)
+    Moved to after parse_args() to suppress during -h
+    Use sys.stdout.isatty() to suppress when stdout is piped
+- Add exit message to stderr (name + version + records displayed)
+- Add version + description to -h output via OptionParser description
+- Remove stdout startup banner (replaced by stderr pattern)
+- Add graceful error message when input file not found
+- Remove stray debug print on -c option
+
+Usage: urecords [options]
+
+urecords v1.6 - Find and display unemployment prospect records
+
+Options:
+  -h, --help    show this help message and exit
+  -a            Display all records, regardless of state
+  -c N          Display this number of entries from the input file
 
 # --------------------------------------------------
 # Ver: 1.5
